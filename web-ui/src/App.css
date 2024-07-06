@@ -1,0 +1,94 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('/src/mmorpg-background.jfif');
+  background-size: cover;
+  background-position: center;
+}
+
+.App {
+  text-align: center;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #333;
+  font-size: 2em;
+  margin-bottom: 20px;
+}
+
+.login-container, .stats-container {
+  margin-top: 20px;
+}
+
+.login-input {
+  margin: 10px;
+  padding: 10px;
+  width: calc(100% - 40px);
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.login-button {
+  padding: 10px 20px;
+  margin: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background-color: #0056b3;
+}
+
+.stats {
+  margin-top: 20px;
+  text-align: left;
+}
+
+h2 {
+  color: #555;
+}
+
+h3 {
+  color: #666;
+  margin-top: 20px;
+}
+
+p {
+  color: #777;
+  margin: 5px 0;
+}
+
+.redeem-button {
+  padding: 10px 20px;
+  margin-top: 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.redeem-button:hover {
+  background-color: #0056b3;
+}
