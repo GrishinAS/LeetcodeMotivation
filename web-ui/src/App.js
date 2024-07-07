@@ -77,35 +77,34 @@ const App = () => {
               <h2>Welcome, {username}</h2>
               <p>Last login: {new Date(lastLogin).toLocaleString()}</p>
               {stats && previousStats && (
-                  <div className="stats">
-                    <h3>Statistics</h3>
-                    <div className="stat-item">
-                      <p>Before:</p>
+                  <>
+                    <div className="stats-section">
+                      <h3>Previous Statistics</h3>
                       <p>Easy: {previousStats.solvedEasy}</p>
                       <p>Medium: {previousStats.solvedMedium}</p>
                       <p>Hard: {previousStats.solvedHard}</p>
                     </div>
-                    <div className="stat-item">
-                      <p>New:</p>
+                    <div className="stats-section">
+                      <h3>New Statistics</h3>
                       <p>Easy: {stats.solvedEasy}</p>
                       <p>Medium: {stats.solvedMedium}</p>
                       <p>Hard: {stats.solvedHard}</p>
                     </div>
-                    <div className="stat-item">
-                      <p>Difference:</p>
+                    <div className="stats-section">
+                      <h3>Difference</h3>
                       <p>Easy: {stats.solvedEasy - previousStats.solvedEasy}</p>
                       <p>Medium: {stats.solvedMedium - previousStats.solvedMedium}</p>
                       <p>Hard: {stats.solvedHard - previousStats.solvedHard}</p>
                     </div>
-                    <div className="stat-item">
-                      <p>Total Points:</p>
+                    <div className="stats-section">
+                      <h3>Total Points</h3>
                       <p style={{ color: '#28a745' }}>Easy Points cost: {EASY_COST}</p>
                       <p style={{ color: '#ffd500' }}>Medium Points cost: {MEDIUM_COST}</p>
                       <p style={{ color: '#dc3545' }}>Hard Points cost: {HARD_COST}</p>
                       <p>Total Points Value: {calculateTotalPoints()}</p>
                     </div>
-                  </div>
-                  )}
+                  </>
+              )}
               <button onClick={redeemRewards} className="redeem-button">Redeem Rewards</button>
             </div>
         )}

@@ -6,10 +6,3 @@ public record StatsResponse(
 ) {
 }
 
-record SolvedTasks(
-        int solvedEasy,
-        int solvedMedium,
-        int solvedHard
-) {
-
-}
