@@ -1,1 +1,3 @@
 rootProject.name = 'LeetcodeMotivation'
+include 'backend'
+
