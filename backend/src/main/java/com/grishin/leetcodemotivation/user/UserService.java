@@ -6,11 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Date;
@@ -28,13 +26,7 @@ public class UserService {
     private AuthenticationManager authenticationManager;
 
     public User login(@Valid LoginRequest request) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-        } catch (AuthenticationException e) {
-            log.error("Authenticate error: ", e);
-            throw new RuntimeException(e);
-        }
-
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
         Optional<User> existingUser = userRepository.findByEmail(request.email());
         if (existingUser.isEmpty()) throw new UsernameNotFoundException("User " + request.email() + " is not found");
         return existingUser.get();

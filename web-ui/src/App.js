@@ -1,114 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
+import Home from './Home';
+import Login from './Login';
+import Signup from './Signup';
 import './App.css';
 
-const API_HOST = process.env.REACT_APP_API_HOST;
-const EASY_COST = process.env.REACT_APP_EASY_TASK_POINTS;
-const MEDIUM_COST = process.env.REACT_APP_MEDIUM_TASK_POINTS;
-const HARD_COST = process.env.REACT_APP_HARD_TASK_POINTS;
-
 const App = () => {
-  const [username, setUsername] = useState('');
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [stats, setStats] = useState(null);
-  const [lastLogin, setLastLogin] = useState(null);
-  const [previousStats, setPreviousStats] = useState(null);
+    const [user, setUser] = useState(null);
 
-  const login = async () => {
-    try {
-      const response = await axios.get(`${API_HOST}/api/user/login`, { username });
-      setLastLogin(response.data.lastLogin);
-      setLoggedIn(true);
-    } catch (error) {
-      console.error('Error logging in:', error);
-    }
-  };
+    const handleLogin = (userData) => {
+        setUser(userData);
+    };
 
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get(`${API_HOST}/api/leetcode/stats?username=${username}`);
-      setPreviousStats(response.data.oldStat); // Store previous stats before updating todo figure out logic
-      setStats(response.data.newStat);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  const redeemRewards = async () => {
-    try {
-      const response = await axios.post(`${API_HOST}/api/leetcode/redeem`, { username });
-      console.log('Rewards redeemed:', response.data);
-    } catch (error) {
-      console.error('Error redeeming rewards:', error);
-    }
-  };
-
-  const calculateTotalPoints = () => {
-    if (!stats) return 0;
-    const { solvedEasy, solvedMedium, solvedHard } = stats;
-    const easyPoints = solvedEasy * EASY_COST;
-    const mediumPoints = solvedMedium * MEDIUM_COST;
-    const hardPoints = solvedHard * HARD_COST;
-    return easyPoints + mediumPoints + hardPoints;
-  };
-
-  useEffect(() => {
-    if (loggedIn) {
-      fetchStats();
-    }
-  }, [loggedIn]);
-
+    const handleLogout = () => {
+        setUser(null);
+        sessionStorage.removeItem('csrfToken');
+    };
   return (
-      <div className="App">
-        <h1>LeetCode Rewards</h1>
-        {!loggedIn ? (
-            <div className="login-container">
-              <input
-                  type="text"
-                  placeholder="Enter Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="login-input"
-              />
-              <button onClick={login} className="login-button">Login</button>
-            </div>
-        ) : (
-            <div className="stats-container">
-              <h2>Welcome, {username}</h2>
-              <p>Last login: {new Date(lastLogin).toLocaleString()}</p>
-              {stats && previousStats && (
-                  <>
-                    <div className="stats-section">
-                      <h3>Previous Statistics</h3>
-                      <p>Easy: {previousStats.solvedEasy}</p>
-                      <p>Medium: {previousStats.solvedMedium}</p>
-                      <p>Hard: {previousStats.solvedHard}</p>
-                    </div>
-                    <div className="stats-section">
-                      <h3>New Statistics</h3>
-                      <p>Easy: {stats.solvedEasy}</p>
-                      <p>Medium: {stats.solvedMedium}</p>
-                      <p>Hard: {stats.solvedHard}</p>
-                    </div>
-                    <div className="stats-section">
-                      <h3>Difference</h3>
-                      <p>Easy: {stats.solvedEasy - previousStats.solvedEasy}</p>
-                      <p>Medium: {stats.solvedMedium - previousStats.solvedMedium}</p>
-                      <p>Hard: {stats.solvedHard - previousStats.solvedHard}</p>
-                    </div>
-                    <div className="stats-section">
-                      <h3>Total Points</h3>
-                      <p style={{ color: '#28a745' }}>Easy Points cost: {EASY_COST}</p>
-                      <p style={{ color: '#ffd500' }}>Medium Points cost: {MEDIUM_COST}</p>
-                      <p style={{ color: '#dc3545' }}>Hard Points cost: {HARD_COST}</p>
-                      <p>Total Points Value: {calculateTotalPoints()}</p>
-                    </div>
-                  </>
-              )}
-              <button onClick={redeemRewards} className="redeem-button">Redeem Rewards</button>
-            </div>
-        )}
-      </div>
+      <Router>
+          <div className="App">
+              <Routes>
+                  <Route path="/" element={user ? <Home username={user.username} onLogout={handleLogout} /> : (
+                      <div className="welcome-container">
+                          <h1>Welcome to LeetCode Tracker</h1>
+                          <p>Please login or signup to track your progress and redeem rewards.</p>
+                          <div className="navigation">
+                              <Link to="/login" className="button">Login</Link>
+                              <Link to="/signup" className="button">Signup</Link>
+                          </div>
+                      </div>
+                  )}/>
+                  <Route path="/login" element={user ? <Navigate to="/"/> : <Login onLogin={handleLogin}/>}/>
+                  <Route path="/signup" element= {user ? <Navigate to="/" /> : <Signup />} />
+              </Routes>
+          </div>
+      </Router>
+
   );
 };
 
