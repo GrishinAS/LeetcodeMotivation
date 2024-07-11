@@ -3,17 +3,17 @@ package com.grishin.leetcodemotivation.spring.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.MacAlgorithm;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 public class JWTUtilities {
 
-    private static final MacAlgorithm SECRET_KEY = Jwts.SIG.HS256;
+    private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
     private static final int MINUTES = 60;
 
     public static String generateToken(String email) {
@@ -22,7 +22,7 @@ public class JWTUtilities {
                 .subject(email)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(MINUTES, ChronoUnit.MINUTES)))
-                .signWith(SECRET_KEY.key().build())
+                .signWith(SECRET_KEY)
                 .compact();
     }
 
@@ -39,7 +39,7 @@ public class JWTUtilities {
         try {
             return Jwts
                     .parser()
-                    .verifyWith(SECRET_KEY.key().build())
+                    .verifyWith(SECRET_KEY)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();

@@ -2,12 +2,10 @@ import React, {useEffect, useState} from 'react';
 import axios from './axiosConfig';
 import './Home.css';
 
-const EASY_COST = process.env.REACT_APP_EASY_TASK_POINTS;
-const MEDIUM_COST = process.env.REACT_APP_MEDIUM_TASK_POINTS;
-const HARD_COST = process.env.REACT_APP_HARD_TASK_POINTS;
 
 const Home = ({ username, onLogout }) => {
     const [stats, setStats] = useState(null);
+    const [costs, setCosts] = useState(null);
     const [previousStats, setPreviousStats] = useState(null);
     const [lastLogin, setLastLogin] = useState(null);
     const [error, setError] = useState('');
@@ -15,20 +13,30 @@ const Home = ({ username, onLogout }) => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await axios.get('/api/user/stats', { params: { username } });
-                setStats(response.data.newStats);
-                setPreviousStats(response.data.previousStats);
-                setLastLogin(response.data.lastLogin);
+                const response = await axios.get('/api/leetcode/stats', { params: { username } });
+                setStats(response.data.newStat);
+                setPreviousStats(response.data.oldStat);
+                setLastLogin(Date.parse(response.data.lastLogin));
             } catch (err) {
                 setError('Failed to fetch stats.');
             }
         };
+        const fetchCosts = async () => {
+            try {
+                const response = await axios.get('/api/leetcode/costs', { params: { username } });
+                setCosts(response.data);
+            } catch (err) {
+                setError('Failed to fetch stats.');
+            }
+        };
+
         fetchStats();
+        fetchCosts();
     }, [username]);
 
     const redeemRewards = async () => {
         try {
-            await axios.post('/api/user/redeem', { username });
+            await axios.post('/api/leetcode/redeem', { username });
             alert('Rewards redeemed successfully!');
         } catch (err) {
             setError('Failed to redeem rewards.');
@@ -36,11 +44,11 @@ const Home = ({ username, onLogout }) => {
     };
 
     const calculateTotalPoints = () => {
-        if (!stats) return 0;
+        if (!stats || !previousStats) return 0;
         const {solvedEasy, solvedMedium, solvedHard} = stats;
-        const easyPoints = solvedEasy * EASY_COST;
-        const mediumPoints = solvedMedium * MEDIUM_COST;
-        const hardPoints = solvedHard * HARD_COST;
+        const easyPoints = (solvedEasy - previousStats.solvedEasy) * costs.easyCost;
+        const mediumPoints = (solvedMedium - previousStats.solvedMedium) * costs.mediumCost;
+        const hardPoints = (solvedHard - previousStats.solvedHard) * costs.hardCost;
         return easyPoints + mediumPoints + hardPoints;
     };
 
@@ -74,9 +82,9 @@ const Home = ({ username, onLogout }) => {
                             </div>
                             <div className="stat-item">
                                 <p>Total Points:</p>
-                                <p style={{color: '#28a745'}}>Easy Points cost: {EASY_COST}</p>
-                                <p style={{color: '#ffd500'}}>Medium Points cost: {MEDIUM_COST}</p>
-                                <p style={{color: '#dc3545'}}>Hard Points cost: {HARD_COST}</p>
+                                <p style={{color: '#28a745'}}>Easy Points cost: {costs.easyCost}</p>
+                                <p style={{color: '#ffd500'}}>Medium Points cost: {costs.mediumCost}</p>
+                                <p style={{color: '#dc3545'}}>Hard Points cost: {costs.hardCost}</p>
                                 <p>Total Points Value: {calculateTotalPoints()}</p>
                             </div>
                         </div>

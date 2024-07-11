@@ -1,8 +1,11 @@
 package com.grishin.leetcodemotivation.stats.dto;
 
+import java.util.Date;
+
 public record StatsResponse(
         SolvedTasks oldStat,
-        SolvedTasks newStat
+        SolvedTasks newStat,
+        Date lastLogin
 ) {
 }
 

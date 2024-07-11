@@ -9,8 +9,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
     const csrfToken = sessionStorage.getItem('csrfToken');
+    const jwtToken = sessionStorage.getItem('jwtToken');
     if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;
+    }
+    if (jwtToken) {
+        config.headers['Authorization'] = "Bearer " + jwtToken;
     }
     return config;
 }, (error) => {

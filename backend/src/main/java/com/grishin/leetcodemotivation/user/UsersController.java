@@ -30,7 +30,6 @@ public class UsersController {
                 user.getUsername(),
                 user.getEmail(),
                 user.getLeetcodeAcc(),
-                user.getLastLogin(),
                 token);
         return ResponseEntity.ok(body);
     }

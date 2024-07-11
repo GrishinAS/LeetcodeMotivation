@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class StatsService {
+public class LeetcodeService {
 
     @Value("#{T(java.lang.Integer).parseInt('${payment.point.value}')}")
     private Integer pointMoneyValue;
@@ -38,7 +38,8 @@ public class StatsService {
         log.info("Current solved tasks: {}", currentStat);
         return new StatsResponse(
                 user.getSolvedTasks(),
-                currentStat
+                currentStat,
+                user.getLastLogin()
         );
     }
 

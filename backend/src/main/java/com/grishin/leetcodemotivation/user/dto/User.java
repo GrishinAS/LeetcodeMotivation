@@ -1,11 +1,13 @@
 package com.grishin.leetcodemotivation.user.dto;
 
 import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +16,7 @@ import java.util.Date;
 @Entity
 @Data
 @NoArgsConstructor
+@Table
 public final class User {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
@@ -23,7 +26,7 @@ public final class User {
     private String hashedPw;
     private String leetcodeAcc;
     private Date lastLogin;
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     private SolvedTasks solvedTasks;
 
     public User(String username, String email, String hashedPw, String leetcodeAcc, Date lastLogin) {

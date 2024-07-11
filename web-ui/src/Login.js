@@ -14,6 +14,8 @@ const Login = ({ onLogin }) => {
             const response = await axios.post(`${API_HOST}/api/user/login`, { email, password }, { withCredentials: true });
             const csrfToken = response.headers['x-csrf-token'];
             sessionStorage.setItem('csrfToken', csrfToken);
+            const jwtToken = response.data.jwtToken
+            sessionStorage.setItem('jwtToken', jwtToken);
             onLogin(response.data);
         } catch (err) {
             setError('Login failed. Please try again.');
