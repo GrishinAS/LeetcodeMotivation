@@ -1,4 +1,4 @@
-package com.grishin.leetcodemotivation.user;
+package com.grishin.leetcodemotivation.user.dto;
 
 import java.util.Date;
 

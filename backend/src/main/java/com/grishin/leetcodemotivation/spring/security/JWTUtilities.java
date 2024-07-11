@@ -1,4 +1,4 @@
-package com.grishin.leetcodemotivation.user;
+package com.grishin.leetcodemotivation.spring.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

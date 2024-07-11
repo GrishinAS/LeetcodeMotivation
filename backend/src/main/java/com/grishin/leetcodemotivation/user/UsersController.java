@@ -1,5 +1,10 @@
 package com.grishin.leetcodemotivation.user;
 
+import com.grishin.leetcodemotivation.spring.security.JWTUtilities;
+import com.grishin.leetcodemotivation.user.dto.LoginRequest;
+import com.grishin.leetcodemotivation.user.dto.LoginResponse;
+import com.grishin.leetcodemotivation.user.dto.SignupRequest;
+import com.grishin.leetcodemotivation.user.dto.User;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

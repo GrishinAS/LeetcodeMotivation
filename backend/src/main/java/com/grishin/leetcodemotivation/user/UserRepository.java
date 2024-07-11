@@ -1,5 +1,6 @@
 package com.grishin.leetcodemotivation.user;
 
+import com.grishin.leetcodemotivation.user.dto.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

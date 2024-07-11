@@ -1,4 +1,4 @@
-package com.grishin.leetcodemotivation.spring;
+package com.grishin.leetcodemotivation.spring.security;
 
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;

@@ -1,6 +1,6 @@
-package com.grishin.leetcodemotivation.user;
+package com.grishin.leetcodemotivation.user.dto;
 
-import com.grishin.leetcodemotivation.stats.SolvedTasks;
+import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

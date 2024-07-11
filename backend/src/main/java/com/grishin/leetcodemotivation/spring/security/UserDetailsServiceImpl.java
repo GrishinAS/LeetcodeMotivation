@@ -1,5 +1,7 @@
-package com.grishin.leetcodemotivation.user;
+package com.grishin.leetcodemotivation.spring.security;
 
+import com.grishin.leetcodemotivation.user.UserRepository;
+import com.grishin.leetcodemotivation.user.dto.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

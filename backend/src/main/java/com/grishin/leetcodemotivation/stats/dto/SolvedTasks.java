@@ -1,4 +1,4 @@
-package com.grishin.leetcodemotivation.stats;
+package com.grishin.leetcodemotivation.stats.dto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

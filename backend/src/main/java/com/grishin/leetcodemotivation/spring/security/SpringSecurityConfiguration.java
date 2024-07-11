@@ -1,7 +1,5 @@
-package com.grishin.leetcodemotivation.spring;
+package com.grishin.leetcodemotivation.spring.security;
 
-import com.grishin.leetcodemotivation.user.JwtAuthFilter;
-import com.grishin.leetcodemotivation.user.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

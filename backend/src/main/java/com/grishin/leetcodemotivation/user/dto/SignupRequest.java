@@ -1,4 +1,4 @@
-package com.grishin.leetcodemotivation.user;
+package com.grishin.leetcodemotivation.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

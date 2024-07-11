@@ -1,5 +1,10 @@
 package com.grishin.leetcodemotivation.user;
 
+import com.grishin.leetcodemotivation.stats.LeetcodeClient;
+import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
+import com.grishin.leetcodemotivation.user.dto.LoginRequest;
+import com.grishin.leetcodemotivation.user.dto.SignupRequest;
+import com.grishin.leetcodemotivation.user.dto.User;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +29,8 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private LeetcodeClient leetcodeClient;
 
     public User login(@Valid LoginRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
@@ -39,9 +46,11 @@ public class UserService {
         if (existingUser.isPresent()) {
             throw new HttpClientErrorException(HttpStatus.CONFLICT, String.format("User with the email address '%s' already exists.", email));
         }
-
+        SolvedTasks currentStat = leetcodeClient.getCurrentStat(request.leetcodeAccount());
+        log.info("Current stat of new {} account {}", request.username(), currentStat);
         String hashedPassword = passwordEncoder.encode(request.password());
         User user = new User(request.username(), email, hashedPassword, request.leetcodeAccount(), new Date());
+        user.setSolvedTasks(currentStat);
         userRepository.saveAndFlush(user);
         log.info("Account {} successfully saved", request.username());
     }
