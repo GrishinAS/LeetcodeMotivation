@@ -34,9 +34,22 @@ const Home = ({ username, onLogout }) => {
         fetchCosts();
     }, [username]);
 
+    const getCsrfToken = () => {
+        const csrfCookie = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN='));
+        return csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : null;
+    };
+
     const redeemRewards = async () => {
         try {
-            await axios.post('/api/leetcode/redeem', { username });
+        console.log(document.cookie)
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                setError('CSRF token not found.');
+                return;
+            }
+            await axios.post('/api/leetcode/redeem', { username }, { headers: { 'X-XSRF-TOKEN': csrfToken }});
             alert('Rewards redeemed successfully!');
         } catch (err) {
             setError('Failed to redeem rewards.');

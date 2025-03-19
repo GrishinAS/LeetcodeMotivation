@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios, { fetchCsrfToken } from './axiosConfig';
 import './Login.css';
 
 const API_HOST = process.env.REACT_APP_API_HOST;
@@ -11,9 +11,9 @@ const Login = ({ onLogin }) => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post(`${API_HOST}/api/user/login`, { email, password }, { withCredentials: true });
-            const csrfToken = response.headers['x-csrf-token'];
-            sessionStorage.setItem('csrfToken', csrfToken);
+            await fetchCsrfToken();
+
+            const response = await axios.post(`${API_HOST}/api/user/login`, { email, password });
             const jwtToken = response.data.jwtToken
             sessionStorage.setItem('jwtToken', jwtToken);
             onLogin(response.data);

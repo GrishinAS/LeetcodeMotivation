@@ -4,15 +4,14 @@ const API_HOST = process.env.REACT_APP_API_HOST;
 
 const axiosInstance = axios.create({
     baseURL: API_HOST,
+    // Ensures cookies, including XSRF-TOKEN, are sent
     withCredentials: true,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN'
 });
 
 axiosInstance.interceptors.request.use((config) => {
-    const csrfToken = sessionStorage.getItem('csrfToken');
     const jwtToken = sessionStorage.getItem('jwtToken');
-    if (csrfToken) {
-        config.headers['X-CSRF-Token'] = csrfToken;
-    }
     if (jwtToken) {
         config.headers['Authorization'] = "Bearer " + jwtToken;
     }
@@ -20,5 +19,10 @@ axiosInstance.interceptors.request.use((config) => {
 }, (error) => {
     return Promise.reject(error);
 });
+
+export const fetchCsrfToken = async () => {
+    await axiosInstance.get('/api/user/csrf');
+};
+
 
 export default axiosInstance;

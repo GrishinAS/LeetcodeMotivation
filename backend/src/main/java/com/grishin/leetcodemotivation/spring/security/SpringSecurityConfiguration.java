@@ -1,5 +1,7 @@
 package com.grishin.leetcodemotivation.spring.security;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,10 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,25 +45,26 @@ public class SpringSecurityConfiguration
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        tokenRepository.setCookiePath("/");
+
+
         return http
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                new AntPathRequestMatcher("/user/login"),
-                                new AntPathRequestMatcher("/user/signup")
-                                )
                         .csrfTokenRepository(tokenRepository)
-                        .csrfTokenRequestHandler(requestHandler))
-                .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+                        .csrfTokenRequestHandler(new CustomCsrfTokenRequestHandler())
+                        .ignoringRequestMatchers("/user/login", "/user/signup"))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new CsrfCookieFilter(), JwtAuthFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/user/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/error/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationManager(authenticationManager)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .exceptionHandling(handler -> handler.authenticationEntryPoint((request, response, exception) ->
                                 response.sendError(HttpStatus.FORBIDDEN.value(), exception.getMessage()))
                         .accessDeniedHandler((request, response, exception) ->
@@ -82,7 +84,7 @@ public class SpringSecurityConfiguration
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET","POST", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "X-CSRF-Token", "X-Content-Type-Options", "Authorization"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "X-CSRF-Token", "X-XSRF-TOKEN", "Cookie", "X-Content-Type-Options", "Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -90,4 +92,23 @@ public class SpringSecurityConfiguration
         return source;
     }
 
+
 }
+final class CustomCsrfTokenRequestHandler extends CsrfTokenRequestAttributeHandler  {
+    @Override
+    public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+        String actualToken = request.getHeader(csrfToken.getHeaderName());
+        if (actualToken != null) {
+            return actualToken;
+        }
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("XSRF-TOKEN")) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return request.getParameter(csrfToken.getParameterName());
+    }
+    }
