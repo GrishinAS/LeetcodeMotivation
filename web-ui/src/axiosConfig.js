@@ -36,18 +36,59 @@ axiosInstance.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-// Response interceptor to handle JWT expiration errors
+// Response interceptor to handle JWT errors
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 403 && error.response?.data?.includes?.('JWT expired')) {
-            // JWT expired, clear all auth data
+        console.log('Axios interceptor caught error:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+            fullError: error
+        });
+
+        // Check for various JWT-related errors - be more flexible with data type checking
+        const errorData = error.response?.data || '';
+        const errorMessage = typeof errorData === 'string' ? errorData : JSON.stringify(errorData);
+        
+        const isJWTError = error.response?.status === 403 && (
+            errorMessage.includes('JWT expired') ||
+            errorMessage.includes('JWT signature does not match') ||
+            errorMessage.includes('JWT validity cannot be asserted') ||
+            errorMessage.includes('Access denied')
+        );
+
+        // Also check for generic 401 Unauthorized or any 403 with JWT token present
+        const isUnauthorized = error.response?.status === 401;
+        const isForbiddenWithJWT = error.response?.status === 403 && sessionStorage.getItem('jwtToken');
+
+        if (isJWTError || isUnauthorized || isForbiddenWithJWT) {
+            console.warn('JWT authentication failed, redirecting to login:', {
+                isJWTError,
+                isUnauthorized,
+                isForbiddenWithJWT,
+                errorData: error.response?.data
+            });
+            
+            // Clear all auth data
             sessionStorage.removeItem('jwtToken');
             sessionStorage.removeItem('userData');
             sessionStorage.removeItem('csrfToken');
-            // Optionally redirect to login page
-            window.location.href = '/login';
+            
+            // Show a user-friendly message before redirect
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                // Only show alert if not already on login/signup page
+                const userMessage = errorMessage.includes('JWT signature does not match') 
+                    ? 'Server was restarted. Please log in again.'
+                    : 'Your session has expired. Please log in again.';
+                
+                setTimeout(() => {
+                    alert(userMessage);
+                    window.location.href = '/login';
+                }, 100);
+            }
         }
+        
         return Promise.reject(error);
     }
 );

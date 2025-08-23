@@ -9,7 +9,7 @@ const rewards = [
     title: 'No Sugar Coffee',
     description: 'Basic black coffee or americano without sugar',
     pointCost: 100,
-    image: '/images/black-coffee.jpg',
+    image: '/images/regular-coffee.jpg',
     category: 'coffee'
   },
   {
@@ -17,7 +17,7 @@ const rewards = [
     title: 'Starbucks Latte',
     description: 'Classic Starbucks latte of your choice',
     pointCost: 250,
-    image: '/images/starbucks-latte.jpg',
+    image: '/images/paper-cup-starb.png',
     category: 'coffee'
   },
   {
@@ -25,7 +25,7 @@ const rewards = [
     title: 'Monster Energy Drink (No Sugar)',
     description: 'Sugar-free Monster energy drink',
     pointCost: 300,
-    image: '/images/monster-no-sugar.jpg',
+    image: '/images/monster-no-sugar.png',
     category: 'energy'
   },
   {
@@ -41,7 +41,7 @@ const rewards = [
     title: 'Game Wallet $10',
     description: '$10 credit for Steam, PlayStation, or Xbox',
     pointCost: 700,
-    image: '/images/game-wallet.jpg',
+    image: '/images/bdo-icon.jpg',
     category: 'gaming'
   }
 ];
@@ -148,8 +148,17 @@ const Redeem = ({ username }) => {
               key={reward.id} 
               className={`reward-card ${!canAfford(reward) ? 'insufficient' : ''} ${isRedeemed(reward) ? 'redeemed' : ''}`}
             >
-              <div className="reward-image-placeholder">
-                <div className="image-placeholder">🎁</div>
+              <div className="reward-image-container">
+                <img 
+                  src={reward.image} 
+                  alt={reward.title}
+                  className="reward-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="image-fallback" style={{display: 'none'}}>🎁</div>
               </div>
               
               <div className="reward-content">

@@ -53,6 +53,33 @@ const App = () => {
         sessionStorage.removeItem('csrfToken');
     };
 
+    // Add a window event listener for auth failures from axios interceptor
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            // If JWT token is removed (by axios interceptor), update user state
+            if (e.key === 'jwtToken' && e.newValue === null) {
+                setUser(null);
+            }
+        };
+
+        // Also check if sessionStorage was cleared by axios interceptor
+        const checkAuthStatus = () => {
+            if (user && !sessionStorage.getItem('jwtToken')) {
+                setUser(null);
+            }
+        };
+
+        // Check every 5 seconds if user state is out of sync
+        const authChecker = setInterval(checkAuthStatus, 20000);
+        
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(authChecker);
+        };
+    }, [user]);
+
     if (loading) {
         return (
             <div className="App">

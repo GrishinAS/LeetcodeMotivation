@@ -19,7 +19,10 @@ const Home = ({ username, onLogout }) => {
                 setPreviousStats(response.data.oldStat);
                 setLastLogin(Date.parse(response.data.lastLogin));
             } catch (err) {
-                setError('Failed to fetch stats.');
+                // Don't set error for auth failures since axios interceptor handles it
+                if (err.response?.status !== 401 && err.response?.status !== 403) {
+                    setError('Failed to fetch stats.');
+                }
             }
         };
         const fetchCosts = async () => {
@@ -27,7 +30,10 @@ const Home = ({ username, onLogout }) => {
                 const response = await axios.get('/api/leetcode/costs', { params: { username } });
                 setCosts(response.data);
             } catch (err) {
-                setError('Failed to fetch stats.');
+                // Don't set error for auth failures since axios interceptor handles it
+                if (err.response?.status !== 401 && err.response?.status !== 403) {
+                    setError('Failed to fetch costs.');
+                }
             }
         };
 
@@ -60,7 +66,10 @@ const Home = ({ username, onLogout }) => {
             setPreviousStats(response.data.oldStat);
             setLastLogin(Date.parse(response.data.lastLogin));
         } catch (err) {
-            setError('Failed to sync stats.');
+            // Don't set error for auth failures since axios interceptor handles it
+            if (err.response?.status !== 401 && err.response?.status !== 403) {
+                setError('Failed to sync stats.');
+            }
         }
     };
 
