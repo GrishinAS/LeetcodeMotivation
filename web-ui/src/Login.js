@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios, { fetchCsrfToken } from './axiosConfig';
 import './Login.css';
 
@@ -9,15 +9,30 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+    // Clear any existing auth data when component mounts
+    useEffect(() => {
+        sessionStorage.removeItem('jwtToken');
+        sessionStorage.removeItem('userData');
+        sessionStorage.removeItem('csrfToken');
+    }, []);
+
     const handleLogin = async () => {
         try {
+            // Clear any existing auth data before attempting login
+            sessionStorage.removeItem('jwtToken');
+            sessionStorage.removeItem('userData');
+            sessionStorage.removeItem('csrfToken');
+            
+            setError('');
             await fetchCsrfToken();
 
             const response = await axios.post(`${API_HOST}/api/user/login`, { email, password });
-            const jwtToken = response.data.jwtToken
+            const { jwtToken, ...userData } = response.data;
             sessionStorage.setItem('jwtToken', jwtToken);
+            sessionStorage.setItem('userData', JSON.stringify(userData));
             onLogin(response.data);
         } catch (err) {
+            console.error('Login error:', err);
             setError('Login failed. Please try again.');
         }
     };

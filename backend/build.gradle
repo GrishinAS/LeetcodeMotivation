@@ -41,7 +41,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.hibernate.orm:hibernate-community-dialects'
 	implementation 'org.hibernate.validator:hibernate-validator'
-	implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+	implementation 'org.xerial:sqli' +
+			'te-jdbc:3.46.0.0'
 
 	// authorization
 	implementation 'org.springframework.boot:spring-boot-starter-security'

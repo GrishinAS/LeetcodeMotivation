@@ -33,6 +33,8 @@ public class LeetcodeService {
     public StatsResponse getStats(String username) {
         log.info("Stats requested for user {}", username);
         User user = userRepository.findByUsername(username);
+        if (user == null)
+            throw new IllegalArgumentException("User " + username + " not found");
         log.info("User {} with leetcode account {} and previous stats {} found, requesting stats", username, user.getLeetcodeAcc(), user.getSolvedTasks());
         SolvedTasks currentStat = leetcodeClient.getCurrentStat(user.getLeetcodeAcc());
         log.info("Current solved tasks: {}", currentStat);

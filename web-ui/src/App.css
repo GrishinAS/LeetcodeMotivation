@@ -10,9 +10,10 @@ body {
 .App {
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   text-align: center;
+  padding: 20px 0;
+  align-items: flex-start;
 }
 
 .welcome-container {
