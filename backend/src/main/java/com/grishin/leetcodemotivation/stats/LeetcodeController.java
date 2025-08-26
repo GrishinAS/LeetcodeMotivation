@@ -20,14 +20,19 @@ public class LeetcodeController {
         return leetcodeService.getStats(username);
     }
 
+    @PostMapping("/sync")
+    public StatsResponse syncStats(@RequestParam String username) {
+        return leetcodeService.syncStats(username);
+    }
+
     @GetMapping("/costs")
     public Costs getCosts() {
         return leetcodeService.getCosts();
     }
 
     @PostMapping("/redeem")
-    public void redeemPoints(@RequestParam String username) {
-        leetcodeService.redeemPoints(username);
+    public void redeemPoints(@RequestParam String username, @RequestParam int points) {
+        leetcodeService.redeemPoints(username, points);
     }
 }
 

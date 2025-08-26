@@ -9,6 +9,7 @@ const Home = ({ username, onLogout }) => {
     const [costs, setCosts] = useState(null);
     const [previousStats, setPreviousStats] = useState(null);
     const [lastLogin, setLastLogin] = useState(null);
+    const [currentPoints, setCurrentPoints] = useState(0);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -18,6 +19,7 @@ const Home = ({ username, onLogout }) => {
                 setStats(response.data.newStat);
                 setPreviousStats(response.data.oldStat);
                 setLastLogin(Date.parse(response.data.lastLogin));
+                setCurrentPoints(response.data.currentPoints || 0);
             } catch (err) {
                 // Don't set error for auth failures since axios interceptor handles it
                 if (err.response?.status !== 401 && err.response?.status !== 403) {
@@ -49,22 +51,22 @@ const Home = ({ username, onLogout }) => {
     };
 
 
-    const calculateTotalPoints = () => {
-        if (!stats || !previousStats) return 0;
-        const {solvedEasy, solvedMedium, solvedHard} = stats;
-        const easyPoints = (solvedEasy - previousStats.solvedEasy) * costs.easyCost;
-        const mediumPoints = (solvedMedium - previousStats.solvedMedium) * costs.mediumCost;
-        const hardPoints = (solvedHard - previousStats.solvedHard) * costs.hardCost;
+    const calculateNewPoints = () => {
+        if (!stats || !previousStats || !costs) return 0;
+        const easyPoints = (stats.solvedEasy - previousStats.solvedEasy) * costs.easyCost;
+        const mediumPoints = (stats.solvedMedium - previousStats.solvedMedium) * costs.mediumCost;
+        const hardPoints = (stats.solvedHard - previousStats.solvedHard) * costs.hardCost;
         return easyPoints + mediumPoints + hardPoints;
     };
 
     const handleSync = async () => {
         try {
             setError('');
-            const response = await axios.get('/api/leetcode/stats', { params: { username } });
+            const response = await axios.post('/api/leetcode/sync', null, { params: { username } });
             setStats(response.data.newStat);
             setPreviousStats(response.data.oldStat);
             setLastLogin(Date.parse(response.data.lastLogin));
+            setCurrentPoints(response.data.currentPoints || 0);
         } catch (err) {
             // Don't set error for auth failures since axios interceptor handles it
             if (err.response?.status !== 401 && err.response?.status !== 403) {
@@ -131,13 +133,13 @@ const Home = ({ username, onLogout }) => {
                             <p className="cost-item hard">Hard: {costs?.hardCost} points</p>
                         </div>
                         <div className="total-points">
-                            Total Points Earned: {calculateTotalPoints()}
+                            Current Points: {currentPoints}
                         </div>
                     </div>
                 </div>
                 <div className="action-buttons">
                     <Link to="/redeem" className="shop-button">
-                        🛍️ Redeem Points ({calculateTotalPoints()} available)
+                        🛍️ Redeem Points ({currentPoints} available)
                     </Link>
                 </div>
                 {error && <p className="error">{error}</p>}

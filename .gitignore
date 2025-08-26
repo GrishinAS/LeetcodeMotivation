@@ -1,0 +1,32 @@
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Database files
+*.db
+*.db:schema
+mydb.db*
+
+# Log files
+logs/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test files
+cookies.txt
+
+# Documentation (uncomment if you want to track CLAUDE.md)
+# CLAUDE.md
+
+# OS files
+.DS_Store
+Thumbs.db

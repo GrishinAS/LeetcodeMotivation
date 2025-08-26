@@ -41,28 +41,59 @@ public class LeetcodeService {
         return new StatsResponse(
                 user.getSolvedTasks(),
                 currentStat,
-                user.getLastLogin()
+                user.getLastLogin(),
+                user.getCurrentPoints()
         );
     }
 
-    public void redeemPoints(String username) {
-        StatsResponse stats = getStats(username);
+    public StatsResponse syncStats(String username) {
+        log.info("Syncing stats for user {}", username);
+        User user = userRepository.findByUsername(username);
+        if (user == null)
+            throw new IllegalArgumentException("User " + username + " not found");
 
-        SolvedTasks oldStat = stats.oldStat();
-        SolvedTasks newStat = stats.newStat();
+        SolvedTasks oldStat = user.getSolvedTasks();
+        SolvedTasks currentStat = leetcodeClient.getCurrentStat(user.getLeetcodeAcc());
+        
+        // Calculate points earned since last sync
+        int easyPointsEarned = (currentStat.getSolvedEasy() - oldStat.getSolvedEasy()) * costs.getEasyCost();
+        int mediumPointsEarned = (currentStat.getSolvedMedium() - oldStat.getSolvedMedium()) * costs.getMediumCost();
+        int hardPointsEarned = (currentStat.getSolvedHard() - oldStat.getSolvedHard()) * costs.getHardCost();
+        
+        int pointsEarned = easyPointsEarned + mediumPointsEarned + hardPointsEarned;
 
-        int easyPointsEarned = (newStat.getSolvedEasy() - oldStat.getSolvedEasy()) * costs.getEasyCost();
-        int mediumPointsEarned = (newStat.getSolvedMedium() - oldStat.getSolvedMedium()) * costs.getMediumCost();
-        int hardPointsEarned = (newStat.getSolvedHard() - oldStat.getSolvedHard()) * costs.getHardCost();
+        int newTotalPoints = user.getCurrentPoints() + pointsEarned;
+        user.setCurrentPoints(newTotalPoints);
 
-        int totalPoints =  easyPointsEarned + mediumPointsEarned + hardPointsEarned;
+        currentStat.setId(oldStat.getId());
+        user.setSolvedTasks(currentStat);
 
-        int paymentAmount = totalPoints * pointMoneyValue;
-        log.info("Amount to be paid to user {} is {}", username, paymentAmount);
+        userRepository.save(user);
+        
+        log.info("Stats synced for user {}: earned {} points, total points: {}", username, pointsEarned, newTotalPoints);
+        
+        return new StatsResponse(
+                oldStat,
+                currentStat,
+                user.getLastLogin(),
+                newTotalPoints
+        );
+    }
+
+    public void redeemPoints(String username, int pointsToRedeem) {
+        User user = userRepository.findByUsername(username);
+        if (user == null)
+            throw new IllegalArgumentException("User " + username + " not found");
+            
+        if (user.getCurrentPoints() < pointsToRedeem) {
+            throw new IllegalArgumentException("User " + username + " has insufficient points");
+        }
+
+        user.setCurrentPoints(user.getCurrentPoints() - pointsToRedeem);
+        userRepository.save(user);
+
+        int paymentAmount = pointsToRedeem * pointMoneyValue;
+        log.info("Redeeming {} points for user {}, payment amount: {}", pointsToRedeem, username, paymentAmount);
         paymentService.sendPayment(username, paymentAmount);
-
-        newStat.setId(oldStat.getId());
-        statsRepository.save(newStat);
-        log.info("Stats updated to {} for user {}", newStat, username);
     }
 }

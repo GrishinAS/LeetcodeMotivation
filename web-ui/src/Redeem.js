@@ -60,19 +60,8 @@ const Redeem = ({ username }) => {
   const fetchCurrentPoints = async () => {
     setLoading(true);
     try {
-      const [statsResponse, costsResponse] = await Promise.all([
-        axios.get('/api/leetcode/stats', { params: { username } }),
-        axios.get('/api/leetcode/costs', { params: { username } })
-      ]);
-      
-      const { newStat, oldStat } = statsResponse.data;
-      const costs = costsResponse.data;
-      
-      const easyPoints = (newStat.solvedEasy - oldStat.solvedEasy) * costs.easyCost;
-      const mediumPoints = (newStat.solvedMedium - oldStat.solvedMedium) * costs.mediumCost;
-      const hardPoints = (newStat.solvedHard - oldStat.solvedHard) * costs.hardCost;
-      
-      setCurrentPoints(easyPoints + mediumPoints + hardPoints);
+      const response = await axios.get('/api/leetcode/stats', { params: { username } });
+      setCurrentPoints(response.data.currentPoints || 0);
     } catch (err) {
       setError('Failed to fetch current points balance.');
     } finally {

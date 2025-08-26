@@ -26,6 +26,7 @@ public final class User {
     private String hashedPw;
     private String leetcodeAcc;
     private Date lastLogin;
+    private int currentPoints = 0;
     @OneToOne(cascade=CascadeType.ALL)
     private SolvedTasks solvedTasks;
 
@@ -35,6 +36,7 @@ public final class User {
         this.hashedPw = hashedPw;
         this.leetcodeAcc = leetcodeAcc;
         this.lastLogin = lastLogin;
+        this.currentPoints = 0;
     }
 
     // later: add payment destination, payment info, authorization
