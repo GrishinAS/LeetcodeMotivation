@@ -1,0 +1,36 @@
+# Development Profile Configuration
+
+spring:
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    driverClassName: org.sqlite.JDBC
+    url: jdbc:sqlite:mydb.db
+    username: sa
+    password: sa
+
+# CORS Configuration for Development
+app:
+  cors:
+    allowed-origins: http://localhost:3000,http://127.0.0.1:3000
+
+# Development-specific logging
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web.cors: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Development server settings
+server:
+  error:
+    include-stacktrace: always
+    include-binding-errors: always

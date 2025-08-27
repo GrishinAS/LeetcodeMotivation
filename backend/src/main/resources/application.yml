@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: LeetcodeMotivation
+  profiles:
+    active: dev
+  mvc:
+    log-request-details: true
+
+server:
+  port: 6084
+  servlet:
+    contextPath: /api
+  error:
+    include-message: always
+
+# Common application properties
+payment:
+  point:
+    value: 10
+
+costs:
+  easy-cost: 100
+  medium-cost: 300
+  hard-cost: 750
