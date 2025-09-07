@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
-import axios from './axiosConfig';
+import axios, { retryWithFreshCsrf } from './axiosConfig';
 import './Home.css';
 
 
@@ -43,12 +43,6 @@ const Home = ({ username, onLogout }) => {
         fetchCosts();
     }, [username]);
 
-    const getCsrfToken = () => {
-        const csrfCookie = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('XSRF-TOKEN='));
-        return csrfCookie ? decodeURIComponent(csrfCookie.split('=')[1]) : null;
-    };
 
 
     const calculateNewPoints = () => {
@@ -62,12 +56,18 @@ const Home = ({ username, onLogout }) => {
     const handleSync = async () => {
         try {
             setError('');
-            const response = await axios.post('/api/leetcode/sync', null, { params: { username } });
+            
+            const response = await retryWithFreshCsrf(async () => {
+                return await axios.post('/api/leetcode/sync', null, { params: { username } });
+            });
+            
             setStats(response.data.newStat);
             setPreviousStats(response.data.oldStat);
             setLastSync(Date.parse(response.data.lastSync));
             setCurrentPoints(response.data.currentPoints || 0);
         } catch (err) {
+            console.error('Sync error:', err);
+            
             // Don't set error for auth failures since axios interceptor handles it
             if (err.response?.status !== 401 && err.response?.status !== 403) {
                 setError('Failed to sync stats.');

@@ -83,12 +83,18 @@ if (!USE_MOCK_API) {
                 errorMessage.includes('JWT validity cannot be asserted') ||
                 errorMessage.includes('Access denied')
             );
+            
+            const isCSRFError = error.response?.status === 403 && (
+                errorMessage.includes('CSRF') ||
+                errorMessage.includes('Invalid CSRF token')
+            );
 
             // Also check for generic 401 Unauthorized or any 403 with JWT token present
             const isUnauthorized = error.response?.status === 401;
             const isForbiddenWithJWT = error.response?.status === 403 && sessionStorage.getItem('jwtToken');
 
-            if (isJWTError || isUnauthorized || isForbiddenWithJWT) {
+            // Only redirect to login for JWT-related errors, not CSRF errors
+            if ((isJWTError || isUnauthorized || isForbiddenWithJWT) && !isCSRFError) {
                 console.warn('JWT authentication failed, redirecting to login:', {
                     isJWTError,
                     isUnauthorized,
@@ -121,7 +127,32 @@ if (!USE_MOCK_API) {
 }
 
 export const fetchCsrfToken = async () => {
-    await axiosInstance.get('/api/user/csrf');
+    console.log('Fetching fresh CSRF token...');
+    try {
+        await axiosInstance.get('/api/user/csrf');
+        console.log('CSRF token refreshed successfully');
+    } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+        throw error;
+    }
+};
+
+// Global function to retry requests with fresh CSRF token
+export const retryWithFreshCsrf = async (requestFunction) => {
+    try {
+        return await requestFunction();
+    } catch (error) {
+        if (error.response?.status === 403 && 
+            (error.response?.data?.includes?.('CSRF') || 
+             error.message?.includes?.('CSRF') ||
+             error.response?.statusText === 'Forbidden')) {
+            
+            console.log('CSRF error detected, refreshing token and retrying...');
+            await fetchCsrfToken();
+            return await requestFunction();
+        }
+        throw error;
+    }
 };
 
 
