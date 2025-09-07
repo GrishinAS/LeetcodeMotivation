@@ -11,6 +11,11 @@ const Home = ({ username, onLogout }) => {
     const [lastSync, setLastSync] = useState(null);
     const [currentPoints, setCurrentPoints] = useState(0);
     const [error, setError] = useState('');
+    const [skippedTasks, setSkippedTasks] = useState({
+        easy: 0,
+        medium: 0,
+        hard: 0
+    });
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -47,10 +52,20 @@ const Home = ({ username, onLogout }) => {
 
     const calculateNewPoints = () => {
         if (!stats || !previousStats || !costs) return 0;
-        const easyPoints = (stats.solvedEasy - previousStats.solvedEasy) * costs.easyCost;
-        const mediumPoints = (stats.solvedMedium - previousStats.solvedMedium) * costs.mediumCost;
-        const hardPoints = (stats.solvedHard - previousStats.solvedHard) * costs.hardCost;
+        const easyPoints = Math.max(0, (stats.solvedEasy - previousStats.solvedEasy - skippedTasks.easy)) * costs.easyCost;
+        const mediumPoints = Math.max(0, (stats.solvedMedium - previousStats.solvedMedium - skippedTasks.medium)) * costs.mediumCost;
+        const hardPoints = Math.max(0, (stats.solvedHard - previousStats.solvedHard - skippedTasks.hard)) * costs.hardCost;
         return easyPoints + mediumPoints + hardPoints;
+    };
+
+    const updateSkippedTasks = (type, delta) => {
+        const maxSkip = stats && previousStats ? 
+            Math.max(0, stats[`solved${type.charAt(0).toUpperCase() + type.slice(1)}`] - previousStats[`solved${type.charAt(0).toUpperCase() + type.slice(1)}`]) : 0;
+        
+        setSkippedTasks(prev => ({
+            ...prev,
+            [type]: Math.max(0, Math.min(maxSkip, prev[type] + delta))
+        }));
     };
 
     const handleSync = async () => {
@@ -58,13 +73,18 @@ const Home = ({ username, onLogout }) => {
             setError('');
             
             const response = await retryWithFreshCsrf(async () => {
-                return await axios.post('/api/leetcode/sync', null, { params: { username } });
+                return await axios.post('/api/leetcode/sync', {
+                    skippedEasy: skippedTasks.easy,
+                    skippedMedium: skippedTasks.medium,
+                    skippedHard: skippedTasks.hard
+                }, { params: { username } });
             });
             
             setStats(response.data.newStat);
             setPreviousStats(response.data.oldStat);
             setLastSync(Date.parse(response.data.lastSync));
             setCurrentPoints(response.data.currentPoints || 0);
+            setSkippedTasks({ easy: 0, medium: 0, hard: 0 });
         } catch (err) {
             console.error('Sync error:', err);
             
@@ -104,17 +124,77 @@ const Home = ({ username, onLogout }) => {
                         <div className="stats-card right">
                             <h3>Tasks Solved Since Last Sync</h3>
                             <div className="stat-item">
-                                <div className="stat-row">
-                                    <span className="stat-label easy">Easy:</span>
-                                    <span className="stat-value">{stats.solvedEasy - previousStats.solvedEasy}</span>
+                                <div className="stat-row-with-skip">
+                                    <div className="stat-main">
+                                        <span className="stat-label easy">Easy:</span>
+                                        <span className="stat-value">{stats.solvedEasy - previousStats.solvedEasy}</span>
+                                    </div>
+                                    <div className="skip-controls">
+                                        <span className="skip-label">Skipped:</span>
+                                        <button 
+                                            className="skip-btn minus" 
+                                            onClick={() => updateSkippedTasks('easy', -1)}
+                                            disabled={skippedTasks.easy === 0}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="skip-value">{skippedTasks.easy}</span>
+                                        <button 
+                                            className="skip-btn plus" 
+                                            onClick={() => updateSkippedTasks('easy', 1)}
+                                            disabled={skippedTasks.easy >= Math.max(0, stats.solvedEasy - previousStats.solvedEasy)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="stat-row">
-                                    <span className="stat-label medium">Medium:</span>
-                                    <span className="stat-value">{stats.solvedMedium - previousStats.solvedMedium}</span>
+                                <div className="stat-row-with-skip">
+                                    <div className="stat-main">
+                                        <span className="stat-label medium">Medium:</span>
+                                        <span className="stat-value">{stats.solvedMedium - previousStats.solvedMedium}</span>
+                                    </div>
+                                    <div className="skip-controls">
+                                        <span className="skip-label">Skipped:</span>
+                                        <button 
+                                            className="skip-btn minus" 
+                                            onClick={() => updateSkippedTasks('medium', -1)}
+                                            disabled={skippedTasks.medium === 0}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="skip-value">{skippedTasks.medium}</span>
+                                        <button 
+                                            className="skip-btn plus" 
+                                            onClick={() => updateSkippedTasks('medium', 1)}
+                                            disabled={skippedTasks.medium >= Math.max(0, stats.solvedMedium - previousStats.solvedMedium)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="stat-row">
-                                    <span className="stat-label hard">Hard:</span>
-                                    <span className="stat-value">{stats.solvedHard - previousStats.solvedHard}</span>
+                                <div className="stat-row-with-skip">
+                                    <div className="stat-main">
+                                        <span className="stat-label hard">Hard:</span>
+                                        <span className="stat-value">{stats.solvedHard - previousStats.solvedHard}</span>
+                                    </div>
+                                    <div className="skip-controls">
+                                        <span className="skip-label">Skipped:</span>
+                                        <button 
+                                            className="skip-btn minus" 
+                                            onClick={() => updateSkippedTasks('hard', -1)}
+                                            disabled={skippedTasks.hard === 0}
+                                        >
+                                            -
+                                        </button>
+                                        <span className="skip-value">{skippedTasks.hard}</span>
+                                        <button 
+                                            className="skip-btn plus" 
+                                            onClick={() => updateSkippedTasks('hard', 1)}
+                                            disabled={skippedTasks.hard >= Math.max(0, stats.solvedHard - previousStats.solvedHard)}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -128,8 +208,15 @@ const Home = ({ username, onLogout }) => {
                             <p className="cost-item medium">Medium: {costs?.mediumCost} points</p>
                             <p className="cost-item hard">Hard: {costs?.hardCost} points</p>
                         </div>
-                        <div className="total-points">
-                            Current Points: {currentPoints}
+                        <div className="points-display">
+                            <div className="total-points">
+                                Current Points: {currentPoints}
+                            </div>
+                            {stats && previousStats && costs && (
+                                <div className="new-points">
+                                    Points to earn: {calculateNewPoints()}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

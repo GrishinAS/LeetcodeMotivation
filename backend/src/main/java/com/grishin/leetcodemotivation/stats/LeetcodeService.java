@@ -3,6 +3,7 @@ package com.grishin.leetcodemotivation.stats;
 import com.grishin.leetcodemotivation.payment.PaymentService;
 import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
 import com.grishin.leetcodemotivation.stats.dto.StatsResponse;
+import com.grishin.leetcodemotivation.stats.dto.SyncRequest;
 import com.grishin.leetcodemotivation.user.UserRepository;
 import com.grishin.leetcodemotivation.user.dto.User;
 import lombok.Getter;
@@ -46,8 +47,10 @@ public class LeetcodeService {
         );
     }
 
-    public StatsResponse syncStats(String username) {
-        log.info("Syncing stats for user {}", username);
+    public StatsResponse syncStats(String username, SyncRequest syncRequest) {
+        log.info("Syncing stats for user {} with skip data: easy={}, medium={}, hard={}", 
+                username, syncRequest.getSkippedEasy(), syncRequest.getSkippedMedium(), syncRequest.getSkippedHard());
+        
         User user = userRepository.findByUsername(username);
         if (user == null)
             throw new IllegalArgumentException("User " + username + " not found");
@@ -55,10 +58,20 @@ public class LeetcodeService {
         SolvedTasks oldStat = user.getSolvedTasks();
         SolvedTasks currentStat = leetcodeClient.getCurrentStat(user.getLeetcodeAcc());
         
-        // Calculate points earned since last sync
-        int easyPointsEarned = (currentStat.getSolvedEasy() - oldStat.getSolvedEasy()) * costs.getEasyCost();
-        int mediumPointsEarned = (currentStat.getSolvedMedium() - oldStat.getSolvedMedium()) * costs.getMediumCost();
-        int hardPointsEarned = (currentStat.getSolvedHard() - oldStat.getSolvedHard()) * costs.getHardCost();
+        // Calculate tasks solved since last sync for validation
+        int easySinceLastSync = currentStat.getSolvedEasy() - oldStat.getSolvedEasy();
+        int mediumSinceLastSync = currentStat.getSolvedMedium() - oldStat.getSolvedMedium();
+        int hardSinceLastSync = currentStat.getSolvedHard() - oldStat.getSolvedHard();
+        
+        // Validate skip amounts
+        validateSkipAmount(syncRequest.getSkippedEasy(), easySinceLastSync, "easy");
+        validateSkipAmount(syncRequest.getSkippedMedium(), mediumSinceLastSync, "medium");
+        validateSkipAmount(syncRequest.getSkippedHard(), hardSinceLastSync, "hard");
+        
+        // Calculate points earned since last sync (subtract skipped tasks)
+        int easyPointsEarned = Math.max(0, easySinceLastSync - syncRequest.getSkippedEasy()) * costs.getEasyCost();
+        int mediumPointsEarned = Math.max(0, mediumSinceLastSync - syncRequest.getSkippedMedium()) * costs.getMediumCost();
+        int hardPointsEarned = Math.max(0, hardSinceLastSync - syncRequest.getSkippedHard()) * costs.getHardCost();
         
         int pointsEarned = easyPointsEarned + mediumPointsEarned + hardPointsEarned;
 
@@ -71,7 +84,9 @@ public class LeetcodeService {
 
         userRepository.save(user);
         
-        log.info("Stats synced for user {}: earned {} points, total points: {}", username, pointsEarned, newTotalPoints);
+        log.info("Stats synced for user {}: earned {} points (after skipping {} easy, {} medium, {} hard), total points: {}", 
+                username, pointsEarned, syncRequest.getSkippedEasy(), syncRequest.getSkippedMedium(), 
+                syncRequest.getSkippedHard(), newTotalPoints);
         
         return new StatsResponse(
                 oldStat,
@@ -79,6 +94,16 @@ public class LeetcodeService {
                 currentStat.getLastSync(),
                 newTotalPoints
         );
+    }
+    
+    private void validateSkipAmount(int skippedAmount, int totalSinceSync, String difficulty) {
+        if (skippedAmount < 0) {
+            throw new IllegalArgumentException("Skipped " + difficulty + " tasks cannot be negative");
+        }
+        if (skippedAmount > totalSinceSync) {
+            throw new IllegalArgumentException("Cannot skip more " + difficulty + " tasks (" + skippedAmount + 
+                    ") than solved since last sync (" + totalSinceSync + ")");
+        }
     }
 
     public void redeemPoints(String username, int pointsToRedeem) {

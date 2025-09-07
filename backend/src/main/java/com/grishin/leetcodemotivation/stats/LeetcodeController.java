@@ -1,9 +1,11 @@
 package com.grishin.leetcodemotivation.stats;
 
 import com.grishin.leetcodemotivation.stats.dto.StatsResponse;
+import com.grishin.leetcodemotivation.stats.dto.SyncRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,8 +23,8 @@ public class LeetcodeController {
     }
 
     @PostMapping("/sync")
-    public StatsResponse syncStats(@RequestParam String username) {
-        return leetcodeService.syncStats(username);
+    public StatsResponse syncStats(@RequestParam String username, @RequestBody SyncRequest syncRequest) {
+        return leetcodeService.syncStats(username, syncRequest);
     }
 
     @GetMapping("/costs")

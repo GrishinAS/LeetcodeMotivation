@@ -147,6 +147,87 @@
   border-left-color: #dc3545;
 }
 
+.stat-row-with-skip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.stat-row-with-skip:last-child {
+  margin-bottom: 0;
+}
+
+.stat-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skip-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.skip-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 5px;
+}
+
+.skip-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.skip-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.skip-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.skip-btn.minus:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.3);
+  border-color: #dc3545;
+}
+
+.skip-btn.plus:hover:not(:disabled) {
+  background: rgba(40, 167, 69, 0.3);
+  border-color: #28a745;
+}
+
+.skip-value {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ffd500;
+  min-width: 20px;
+  text-align: center;
+}
+
 .points-section {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   padding: 25px;
@@ -184,11 +265,25 @@
   margin: 0;
 }
 
+.points-display {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
 .total-points {
   font-size: 1.3rem;
   font-weight: bold;
   color: #007bff;
   text-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.new-points {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #28a745;
+  text-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
 }
 
 .sync-section {
@@ -233,6 +328,10 @@
   .points-info {
     flex-direction: column;
     gap: 15px;
+  }
+  
+  .points-display {
+    align-items: center;
   }
   
   .point-costs {
