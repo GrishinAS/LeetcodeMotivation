@@ -27,7 +27,7 @@ spring:
 # CORS Configuration for Production (AWS CloudFront/ALB)
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://your-domain.com}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://leetcode-motivation.vercel.app}
 
 # Health check and metrics
 management:
@@ -57,4 +57,4 @@ server:
     key-store: classpath:keystore.p12
     key-store-password: changeit
     key-store-type: PKCS12
-    key-alias: springboo
+    key-alias: springboot

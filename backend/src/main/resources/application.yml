@@ -1,8 +1,6 @@
 spring:
   application:
     name: LeetcodeMotivation
-  profiles:
-    active: dev
   mvc:
     log-request-details: true
 
