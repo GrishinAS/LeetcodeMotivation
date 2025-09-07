@@ -81,10 +81,6 @@ const Home = ({ username, onLogout }) => {
             <div className="stats-container">
                 <div className="header-section">
                     <h2>Welcome, {username}</h2>
-                    <p>Last sync: {lastSync ? new Date(lastSync).toLocaleString() : 'Never'}</p>
-                    <button onClick={handleSync} className="sync-button">
-                        🔄 Sync Stats
-                    </button>
                 </div>
                 {stats && previousStats && (
                     <div className="stats-grid">
@@ -135,6 +131,14 @@ const Home = ({ username, onLogout }) => {
                         <div className="total-points">
                             Current Points: {currentPoints}
                         </div>
+                    </div>
+                </div>
+                <div className="sync-section">
+                    <div className="sync-info">
+                        <p className="last-sync">Last sync: {lastSync ? new Date(lastSync).toLocaleString() : 'Never'}</p>
+                        <button onClick={handleSync} className="sync-button">
+                            🔄 Sync Stats
+                        </button>
                     </div>
                 </div>
                 <div className="action-buttons">
