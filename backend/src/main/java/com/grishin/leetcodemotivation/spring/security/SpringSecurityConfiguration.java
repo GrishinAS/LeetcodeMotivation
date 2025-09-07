@@ -2,6 +2,7 @@ package com.grishin.leetcodemotivation.spring.security;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,9 @@ public class SpringSecurityConfiguration
 {
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
+    
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
     public SpringSecurityConfiguration(UserDetailsServiceImpl userDetailsService, JwtAuthFilter jwtAuthFilter) {
         this.userDetailsService = userDetailsService;
@@ -82,7 +86,7 @@ public class SpringSecurityConfiguration
 
     public CorsConfigurationSource apiConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET","POST", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "X-CSRF-Token", "X-XSRF-TOKEN", "Cookie", "X-Content-Type-Options", "Authorization"));
         configuration.setAllowCredentials(true);
