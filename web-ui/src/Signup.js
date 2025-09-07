@@ -47,7 +47,11 @@ const Signup = () => {
                 type="text"
                 className="signup-input"
                 value={leetcodeAccount}
-                onChange={(e) => setLeetcodeAccount(e.target.value)}
+                onChange={(e) => {
+                    const value = e.target.value;
+                    const cleanValue = value.includes('@') ? value.split('@')[0] : value;
+                    setLeetcodeAccount(e.target.value)}
+                }
                 placeholder="LeetCode Account"
             />
             <input
