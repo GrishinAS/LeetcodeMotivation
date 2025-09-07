@@ -5,7 +5,7 @@ import java.util.Date;
 public record StatsResponse(
         SolvedTasks oldStat,
         SolvedTasks newStat,
-        Date lastLogin,
+        Date lastSync,
         Integer currentPoints
 ) {
 }

@@ -41,7 +41,7 @@ public class LeetcodeService {
         return new StatsResponse(
                 user.getSolvedTasks(),
                 currentStat,
-                user.getLastLogin(),
+                user.getSolvedTasks() != null ? user.getSolvedTasks().getLastSync() : null,
                 user.getCurrentPoints()
         );
     }
@@ -66,6 +66,7 @@ public class LeetcodeService {
         user.setCurrentPoints(newTotalPoints);
 
         currentStat.setId(oldStat.getId());
+        currentStat.setLastSync(new java.util.Date());
         user.setSolvedTasks(currentStat);
 
         userRepository.save(user);
@@ -75,7 +76,7 @@ public class LeetcodeService {
         return new StatsResponse(
                 oldStat,
                 currentStat,
-                user.getLastLogin(),
+                currentStat.getLastSync(),
                 newTotalPoints
         );
     }

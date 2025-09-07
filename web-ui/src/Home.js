@@ -8,7 +8,7 @@ const Home = ({ username, onLogout }) => {
     const [stats, setStats] = useState(null);
     const [costs, setCosts] = useState(null);
     const [previousStats, setPreviousStats] = useState(null);
-    const [lastLogin, setLastLogin] = useState(null);
+    const [lastSync, setLastSync] = useState(null);
     const [currentPoints, setCurrentPoints] = useState(0);
     const [error, setError] = useState('');
 
@@ -18,7 +18,7 @@ const Home = ({ username, onLogout }) => {
                 const response = await axios.get('/api/leetcode/stats', { params: { username } });
                 setStats(response.data.newStat);
                 setPreviousStats(response.data.oldStat);
-                setLastLogin(Date.parse(response.data.lastLogin));
+                setLastSync(Date.parse(response.data.lastSync));
                 setCurrentPoints(response.data.currentPoints || 0);
             } catch (err) {
                 // Don't set error for auth failures since axios interceptor handles it
@@ -65,7 +65,7 @@ const Home = ({ username, onLogout }) => {
             const response = await axios.post('/api/leetcode/sync', null, { params: { username } });
             setStats(response.data.newStat);
             setPreviousStats(response.data.oldStat);
-            setLastLogin(Date.parse(response.data.lastLogin));
+            setLastSync(Date.parse(response.data.lastSync));
             setCurrentPoints(response.data.currentPoints || 0);
         } catch (err) {
             // Don't set error for auth failures since axios interceptor handles it
@@ -81,7 +81,7 @@ const Home = ({ username, onLogout }) => {
             <div className="stats-container">
                 <div className="header-section">
                     <h2>Welcome, {username}</h2>
-                    <p>Last login: {new Date(lastLogin).toLocaleString()}</p>
+                    <p>Last sync: {lastSync ? new Date(lastSync).toLocaleString() : 'Never'}</p>
                     <button onClick={handleSync} className="sync-button">
                         🔄 Sync Stats
                     </button>
