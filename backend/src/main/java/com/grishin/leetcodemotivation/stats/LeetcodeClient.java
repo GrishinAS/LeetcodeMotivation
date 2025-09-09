@@ -1,12 +1,19 @@
 package com.grishin.leetcodemotivation.stats;
 
-import com.grishin.leetcodemotivation.stats.dto.GraphQLResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grishin.leetcodemotivation.stats.dto.LeetcodeCalendarResponse;
+import com.grishin.leetcodemotivation.stats.dto.LeetcodeStatsResponse;
 import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
 import com.grishin.leetcodemotivation.stats.dto.SubmissionStats;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.client.HttpGraphQlClient;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,6 +22,7 @@ import java.util.stream.Collectors;
 public class LeetcodeClient {
 
     private final HttpGraphQlClient graphQlClient;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public LeetcodeClient() {
         log.info("Initializing LeetcodeClient with GraphQL endpoint: https://leetcode.com/graphql");
@@ -29,7 +37,7 @@ public class LeetcodeClient {
         System.out.println(currentStat);
     }
 
-    public GraphQLResponse getUserProfile(String username) {
+    public LeetcodeStatsResponse getUserProfile(String username) {
         log.info("Fetching user profile for LeetCode username: {}", username);
         
         String query = "query getUserProfile($username: String!) { " +
@@ -44,15 +52,14 @@ public class LeetcodeClient {
         log.debug("GraphQL query for user {}: {}", username, query);
         
         try {
-            log.debug("Sending GraphQL request to LeetCode API for user: {}", username);
-            GraphQLResponse response = graphQlClient
+            LeetcodeStatsResponse response = graphQlClient
                     .mutate()
                     .header("referer", "https://leetcode.com/" + username + "/")
                     .build()
                     .document(query)
                     .variable("username", username)
                     .execute()
-                    .map(resp -> resp.toEntity(GraphQLResponse.class))
+                    .map(resp -> resp.toEntity(LeetcodeStatsResponse.class))
                     .block();
             
             if (response != null && response.getMatchedUser() != null) {
@@ -73,7 +80,7 @@ public class LeetcodeClient {
         log.info("Getting current statistics for LeetCode account: {}", leetcodeAccount);
         
         try {
-            GraphQLResponse userProfile = getUserProfile(leetcodeAccount);
+            LeetcodeStatsResponse userProfile = getUserProfile(leetcodeAccount);
             
             if (userProfile == null || userProfile.getMatchedUser() == null) {
                 log.error("No user profile data received for account: {}", leetcodeAccount);
@@ -119,6 +126,74 @@ public class LeetcodeClient {
             log.error("Failed to get current statistics for account: {}. Error: {}", 
                     leetcodeAccount, e.getMessage(), e);
             throw new RuntimeException("Failed to get statistics for LeetCode account: " + leetcodeAccount, e);
+        }
+    }
+
+    public Map<LocalDate, Integer> getSubmissionCalendar(String account) {
+        log.info("Getting submission calendar for account: {}", account);
+
+        String query = """
+                query": "query userProfileCalendar($username: String!, $year: Int) {  matchedUser(username: $username) {   userCalendar(year: $year) {      submissionCalendar}}}
+                """;
+
+        log.debug("userProfileCalendar query for user {}, : {}", account, query);
+
+        try {
+            LeetcodeCalendarResponse response = graphQlClient
+                    .mutate()
+                    .header("referer", "https://leetcode.com/" + account + "/")
+                    .build()
+                    .document(query)
+                    .variable("username", account)
+                    .execute()
+                    .map(resp -> resp.toEntity(LeetcodeCalendarResponse.class))
+                    .block();
+
+            if (response != null && response.getMatchedUser() != null) {
+                log.info("Successfully fetched calendar for user: {}", account);
+                log.debug("Calendar response: {}", response);
+            } else {
+                throw new RuntimeException("No calendar found for username: + " + account + " (user might not exist)");
+            }
+
+            Map<LocalDate, Integer> submissionsByDate = getSubmissionsByDate(response.getMatchedUser().getUserCalendar().getSubmissionCalendar());
+            log.info("Successfully parsed calendar for user: {}", account);
+            log.debug("Parsed Calendar: {}", submissionsByDate);
+            return submissionsByDate;
+
+        } catch (Exception e) {
+            log.error("Failed to fetch calendar for username: {}. Error: {}", account, e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch calendar for user: " + account, e);
+        }
+    }
+
+
+    private Map<LocalDate, Integer> getSubmissionsByDate(String submissionCalendar) {
+        if (submissionCalendar == null || submissionCalendar.trim().isEmpty()) {
+            return new LinkedHashMap<>();
+        }
+
+        try {
+            Map<String, Integer> timestampMap = OBJECT_MAPPER.readValue(
+                    submissionCalendar,
+                    new TypeReference<>() {
+                    }
+            );
+
+            Map<LocalDate, Integer> dateMap = new LinkedHashMap<>();
+            timestampMap.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> {
+                        long timestamp = Long.parseLong(entry.getKey());
+                        LocalDate date = Instant.ofEpochSecond(timestamp)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate();
+                        dateMap.put(date, entry.getValue());
+                    });
+
+            return dateMap;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse submission calendar", e);
         }
     }
 }

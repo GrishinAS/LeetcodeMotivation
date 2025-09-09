@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GraphQLResponse {
+public class LeetcodeStatsResponse {
     private List<QuestionCount> allQuestionsCount;
     private UserProfile matchedUser;
 

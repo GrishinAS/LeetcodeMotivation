@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.Map;
+
 @Service
 @Slf4j
 public class LeetcodeService {
@@ -39,12 +42,23 @@ public class LeetcodeService {
         log.info("User {} with leetcode account {} and previous stats {} found, requesting stats", username, user.getLeetcodeAcc(), user.getSolvedTasks());
         SolvedTasks currentStat = leetcodeClient.getCurrentStat(user.getLeetcodeAcc());
         log.info("Current solved tasks: {}", currentStat);
+        int streak = calculateStreak(user.getLeetcodeAcc());
         return new StatsResponse(
                 user.getSolvedTasks(),
                 currentStat,
                 user.getSolvedTasks() != null ? user.getSolvedTasks().getLastSync() : null,
                 user.getCurrentPoints()
         );
+    }
+
+    private int calculateStreak(String leetcodeAcc) {
+        Map<LocalDate, Integer> submissionCalendar = leetcodeClient.getSubmissionCalendar(leetcodeAcc);
+        int streak = 0;
+        // Do we count today? does it even return today's submission?
+        for (LocalDate localDate : submissionCalendar.keySet()) {
+            // starting from today check every day backwards until there is an empty value and increase count
+        }
+        return streak;
     }
 
     public StatsResponse syncStats(String username, SyncRequest syncRequest) {
