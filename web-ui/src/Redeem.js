@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from './axiosConfig';
 import './Redeem.css';
 
-const rewards = [
+const rewards = [ // todo move to api
   {
     id: 'coffee-no-sugar',
     title: 'No Sugar Coffee',
@@ -82,7 +82,7 @@ const Redeem = ({ username }) => {
 
     try {
       // For now, simulate redemption by deducting points locally
-      // In a real implementation, this would call a backend API
+      // todo finish
       setCurrentPoints(prev => prev - reward.pointCost);
       setRedeemedRewards(prev => new Set([...prev, reward.id]));
       

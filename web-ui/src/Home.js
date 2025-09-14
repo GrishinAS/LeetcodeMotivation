@@ -34,7 +34,7 @@ const Home = ({ username, onLogout }) => {
         };
         const fetchCosts = async () => {
             try {
-                const response = await axios.get('/api/leetcode/costs', { params: { username } });
+                const response = await axios.get('/api/redeem/costs', { params: { username } });
                 setCosts(response.data);
             } catch (err) {
                 // Don't set error for auth failures since axios interceptor handles it

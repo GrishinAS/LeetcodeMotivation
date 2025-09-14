@@ -1,6 +1,5 @@
 package com.grishin.leetcodemotivation.stats;
 
-import com.grishin.leetcodemotivation.payment.PaymentService;
 import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
 import com.grishin.leetcodemotivation.stats.dto.StatsResponse;
 import com.grishin.leetcodemotivation.stats.dto.SyncRequest;
@@ -9,7 +8,6 @@ import com.grishin.leetcodemotivation.user.dto.User;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,10 +17,6 @@ import java.util.Map;
 @Slf4j
 public class LeetcodeService {
 
-    @Value("#{T(java.lang.Integer).parseInt('${payment.point.value}')}")
-    private Integer pointMoneyValue;
-    @Autowired
-    private PaymentService paymentService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -120,20 +114,5 @@ public class LeetcodeService {
         }
     }
 
-    public void redeemPoints(String username, int pointsToRedeem) {
-        User user = userRepository.findByUsername(username);
-        if (user == null)
-            throw new IllegalArgumentException("User " + username + " not found");
-            
-        if (user.getCurrentPoints() < pointsToRedeem) {
-            throw new IllegalArgumentException("User " + username + " has insufficient points");
-        }
 
-        user.setCurrentPoints(user.getCurrentPoints() - pointsToRedeem);
-        userRepository.save(user);
-
-        int paymentAmount = pointsToRedeem * pointMoneyValue;
-        log.info("Redeeming {} points for user {}, payment amount: {}", pointsToRedeem, username, paymentAmount);
-        paymentService.sendPayment(username, paymentAmount);
-    }
 }
