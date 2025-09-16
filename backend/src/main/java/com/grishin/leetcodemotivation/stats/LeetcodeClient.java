@@ -24,11 +24,6 @@ public class LeetcodeClient {
         log.debug("LeetcodeClient successfully initialized");
     }
 
-    public static void main(String[] args) {
-        SolvedTasks currentStat = new LeetcodeClient().getCurrentStat("ghjdthrfafbkj");
-        System.out.println(currentStat);
-    }
-
     public GraphQLResponse getUserProfile(String username) {
         log.info("Fetching user profile for LeetCode username: {}", username);
         
@@ -69,23 +64,23 @@ public class LeetcodeClient {
         }
     }
 
-    public SolvedTasks getCurrentStat(String leetcodeAccount) {
-        log.info("Getting current statistics for LeetCode account: {}", leetcodeAccount);
+    public SolvedTasks getCurrentStat(String account) {
+        log.info("Getting current statistics for LeetCode account: {}", account);
         
         try {
-            GraphQLResponse userProfile = getUserProfile(leetcodeAccount);
+            GraphQLResponse userProfile = getUserProfile(account);
             
             if (userProfile == null || userProfile.getMatchedUser() == null) {
-                log.error("No user profile data received for account: {}", leetcodeAccount);
-                throw new RuntimeException("No user data found for LeetCode account: " + leetcodeAccount);
+                log.error("No user profile data received for account: {}", account);
+                throw new RuntimeException("No user data found for LeetCode account: " + account);
             }
             
             if (userProfile.getMatchedUser().getSubmitStats() == null) {
-                log.error("No submission statistics found for account: {}", leetcodeAccount);
-                throw new RuntimeException("No submission statistics found for account: " + leetcodeAccount);
+                log.error("No submission statistics found for account: {}", account);
+                throw new RuntimeException("No submission statistics found for account: " + account);
             }
             
-            log.debug("Processing submission statistics for account: {}", leetcodeAccount);
+            log.debug("Processing submission statistics for account: {}", account);
             Map<String, Integer> byDifficulty = userProfile
                     .getMatchedUser()
                     .getSubmitStats()
@@ -96,7 +91,7 @@ public class LeetcodeClient {
                                     SubmissionStats::getDifficulty,
                                     SubmissionStats::getCount));
             
-            log.debug("Difficulty breakdown for {}: {}", leetcodeAccount, byDifficulty);
+            log.debug("Difficulty breakdown for {}: {}", account, byDifficulty);
             
             Integer easyCount = byDifficulty.get("Easy");
             Integer mediumCount = byDifficulty.get("Medium");
@@ -104,7 +99,7 @@ public class LeetcodeClient {
             
             if (easyCount == null || mediumCount == null || hardCount == null) {
                 log.warn("Missing difficulty data for account: {}. Easy: {}, Medium: {}, Hard: {}", 
-                        leetcodeAccount, easyCount, mediumCount, hardCount);
+                        account, easyCount, mediumCount, hardCount);
                 easyCount = easyCount != null ? easyCount : 0;
                 mediumCount = mediumCount != null ? mediumCount : 0;
                 hardCount = hardCount != null ? hardCount : 0;
@@ -112,13 +107,13 @@ public class LeetcodeClient {
             
             SolvedTasks result = new SolvedTasks(easyCount, mediumCount, hardCount);
             log.info("Successfully retrieved statistics for {}: Easy={}, Medium={}, Hard={}", 
-                    leetcodeAccount, easyCount, mediumCount, hardCount);
+                    account, easyCount, mediumCount, hardCount);
             
             return result;
         } catch (Exception e) {
             log.error("Failed to get current statistics for account: {}. Error: {}", 
-                    leetcodeAccount, e.getMessage(), e);
-            throw new RuntimeException("Failed to get statistics for LeetCode account: " + leetcodeAccount, e);
+                    account, e.getMessage(), e);
+            throw new RuntimeException("Failed to get statistics for LeetCode account: " + account, e);
         }
     }
 }
