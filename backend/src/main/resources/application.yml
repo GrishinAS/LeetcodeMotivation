@@ -11,7 +11,6 @@ server:
   error:
     include-message: always
 
-# Common application properties
 payment:
   point:
     value: 10
@@ -19,7 +18,7 @@ payment:
 costs:
   easy-cost: 100
   medium-cost: 300
-  hard-cost: 750
+  hard-cost: 700
 
 rewards:
   items:
@@ -33,21 +32,21 @@ rewards:
     - id: starbucks-latte
       title: Starbucks Latte
       description: Classic Starbucks latte of your choice
-      pointCost: 250
+      pointCost: 300
       image: /images/paper-cup-starb.png
       category: coffee
 
     - id: monster-energy-no-sugar
       title: Monster Energy Drink (No Sugar)
       description: Sugar-free Monster energy drink
-      pointCost: 300
+      pointCost: 400
       image: /images/monster-no-sugar.jpg
       category: energy
 
     - id: starbucks-frappe
       title: Starbucks Frappe
       description: Refreshing Starbucks frappe or frappuccino
-      pointCost: 400
+      pointCost: 600
       image: /images/starbucks-frappe.jpg
       category: coffee
 

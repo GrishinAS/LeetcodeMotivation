@@ -3,58 +3,17 @@ import { Link } from 'react-router-dom';
 import axios from './axiosConfig';
 import './Redeem.css';
 
-const rewards = [ // todo move to api
-  {
-    id: 'coffee-no-sugar',
-    title: 'No Sugar Coffee',
-    description: 'Basic black coffee or americano without sugar',
-    pointCost: 100,
-    image: '/images/regular-coffee.jpg',
-    category: 'coffee'
-  },
-  {
-    id: 'starbucks-latte',
-    title: 'Starbucks Latte',
-    description: 'Classic Starbucks latte of your choice',
-    pointCost: 250,
-    image: '/images/paper-cup-starb.png',
-    category: 'coffee'
-  },
-  {
-    id: 'monster-energy-no-sugar',
-    title: 'Monster Energy Drink (No Sugar)',
-    description: 'Sugar-free Monster energy drink',
-    pointCost: 300,
-    image: '/images/monster-no-sugar.png',
-    category: 'energy'
-  },
-  {
-    id: 'starbucks-frappe',
-    title: 'Starbucks Frappe',
-    description: 'Refreshing Starbucks frappe or frappuccino',
-    pointCost: 400,
-    image: '/images/starbucks-frappe.jpg',
-    category: 'coffee'
-  },
-  {
-    id: 'game-wallet-10',
-    title: 'Game Wallet $10',
-    description: '$10 credit for Steam, PlayStation, or Xbox',
-    pointCost: 700,
-    image: '/images/bdo-icon.jpg',
-    category: 'gaming'
-  }
-];
-
 const Redeem = ({ username }) => {
   const [currentPoints, setCurrentPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [redeemedRewards, setRedeemedRewards] = useState(new Set());
   const [isRedeeming, setIsRedeeming] = useState(null);
+  const [rewards, setRewards] = useState(null);
 
   useEffect(() => {
     fetchCurrentPoints();
+    fetchRewards();
   }, [username]);
 
   const fetchCurrentPoints = async () => {
@@ -66,6 +25,15 @@ const Redeem = ({ username }) => {
       setError('Failed to fetch current points balance.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRewards = async () => {
+    try {
+      const response = await axios.get('/api/rewards');
+      setRewards(response.data);
+    } catch (err) {
+      setError('Failed to fetch available rewards.');
     }
   };
 

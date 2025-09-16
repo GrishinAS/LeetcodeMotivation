@@ -32,6 +32,50 @@ const mockCosts = {
   hardCost: 750
 };
 
+// Mock rewards data
+const mockRewards = [
+  {
+    id: 'coffee-no-sugar',
+    title: 'No Sugar Coffee',
+    description: 'Basic black coffee or americano without sugar',
+    pointCost: 100,
+    image: '/images/regular-coffee.jpg',
+    category: 'coffee'
+  },
+  {
+    id: 'starbucks-latte',
+    title: 'Starbucks Latte',
+    description: 'Classic Starbucks latte of your choice',
+    pointCost: 250,
+    image: '/images/paper-cup-starb.png',
+    category: 'coffee'
+  },
+  {
+    id: 'monster-energy-no-sugar',
+    title: 'Monster Energy Drink (No Sugar)',
+    description: 'Sugar-free Monster energy drink',
+    pointCost: 300,
+    image: '/images/monster-no-sugar.png',
+    category: 'energy'
+  },
+  {
+    id: 'starbucks-frappe',
+    title: 'Starbucks Frappe',
+    description: 'Refreshing Starbucks frappe or frappuccino',
+    pointCost: 400,
+    image: '/images/starbucks-frappe.jpg',
+    category: 'coffee'
+  },
+  {
+    id: 'game-wallet-10',
+    title: 'Game Wallet $10',
+    description: '$10 credit for Steam, PlayStation, or Xbox',
+    pointCost: 700,
+    image: '/images/bdo-icon.jpg',
+    category: 'gaming'
+  }
+];
+
 // Simulate API delay
 const delay = (ms = MOCK_DELAY) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -121,6 +165,16 @@ export const mockApi = {
     };
   },
 
+  getRewards: async () => {
+    await delay();
+    console.log('[MOCK API] Getting rewards');
+    
+    return {
+      data: mockRewards,
+      status: 200
+    };
+  },
+
   // Generic API call handler
   get: async (url, config = {}) => {
     console.log('[MOCK API] GET:', url, config);
@@ -147,6 +201,10 @@ export const mockApi = {
     
     if (url.includes('/api/leetcode/costs')) {
       return mockApi.getCosts(config.params || {});
+    }
+    
+    if (url.includes('/api/rewards')) {
+      return mockApi.getRewards();
     }
     
     // Default mock response
