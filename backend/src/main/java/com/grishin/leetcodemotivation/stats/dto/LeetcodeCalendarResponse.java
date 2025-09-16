@@ -12,15 +12,14 @@ import java.util.List;
 public class LeetcodeCalendarResponse {
     private UserProfile matchedUser;
 
-
-
     @Data
     public static class UserProfile {
         private UserCalendar userCalendar;
     }
 
     @Data
-    public class UserCalendar {
+    public static class UserCalendar {
         private String submissionCalendar;
+        private String streak;
     }
 }
