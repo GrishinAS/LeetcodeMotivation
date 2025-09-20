@@ -50,7 +50,7 @@ const Signup = () => {
                 onChange={(e) => {
                     const value = e.target.value;
                     const cleanValue = value.includes('@') ? value.split('@')[0] : value;
-                    setLeetcodeAccount(e.target.value)}
+                    setLeetcodeAccount(cleanValue)}
                 }
                 placeholder="LeetCode Account"
             />
