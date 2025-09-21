@@ -7,6 +7,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -16,7 +17,7 @@ import springfox.documentation.spring.web.plugins.Docket;
 import javax.sql.DataSource;
 
 @Configuration
-public class SpringConfiguration {
+public class SpringConfiguration implements WebMvcConfigurer {
 
     @Autowired
     Environment env;
@@ -50,5 +51,11 @@ public class SpringConfiguration {
         filter.setIncludeHeaders(false);
         filter.setAfterMessagePrefix("HTTP Request data: ");
         return filter;
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/static/images/");
     }
 }

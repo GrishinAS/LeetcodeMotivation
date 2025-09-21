@@ -21,13 +21,14 @@ app:
   cors:
     allowed-origins: http://localhost:3000,http://127.0.0.1:3000
 
+  base-url: http://localhost:6084/api
 # Development-specific logging
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.springframework.web.cors: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: TRACE
+    org.springframework.web.cors: TRACE
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
 
 # Development server settings
 server:

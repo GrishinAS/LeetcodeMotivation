@@ -30,7 +30,7 @@ const Redeem = ({ username }) => {
 
   const fetchRewards = async () => {
     try {
-      const response = await axios.get('/api/rewards');
+      const response = await axios.get('/api/redeem/list');
       setRewards(response.data);
     } catch (err) {
       setError('Failed to fetch available rewards.');
@@ -49,15 +49,17 @@ const Redeem = ({ username }) => {
     setIsRedeeming(reward.id);
 
     try {
-      // For now, simulate redemption by deducting points locally
-      // todo finish
-      setCurrentPoints(prev => prev - reward.pointCost);
+      await axios.post('/api/redeem', null, {
+          params: {
+            username: username,
+            rewardId: reward.id
+          }
+      });
+
       setRedeemedRewards(prev => new Set([...prev, reward.id]));
-      
-      setTimeout(() => {
-        alert(`${reward.title} redeemed successfully!`);
-        setIsRedeeming(null);
-      }, 1000);
+      const response = await axios.get('/api/redeem/list');
+      setRewards(response.data);
+      setIsRedeeming(null);
     } catch (err) {
       setError('Failed to redeem reward. Please try again.');
       setIsRedeeming(null);

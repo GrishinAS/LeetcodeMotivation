@@ -91,7 +91,7 @@ if (!USE_MOCK_API) {
 
             // Also check for generic 401 Unauthorized or any 403 with JWT token present
             const isUnauthorized = error.response?.status === 401;
-            const isForbiddenWithJWT = error.response?.status === 403 && sessionStorage.getItem('jwtToken');
+            const isForbiddenWithJWT = error.response?.status === 403 && sessionStorage.getItem('jwtToken') && errorMessage.includes('JWT signature does not match');
 
             // Only redirect to login for JWT-related errors, not CSRF errors
             if ((isJWTError || isUnauthorized || isForbiddenWithJWT) && !isCSRFError) {
@@ -112,7 +112,7 @@ if (!USE_MOCK_API) {
                     // Only show alert if not already on login/signup page
                     const userMessage = errorMessage.includes('JWT signature does not match') 
                         ? 'Server was restarted. Please log in again.'
-                        : 'Your session has expired. Please log in again.';
+                        : 'Forbidden.';
                     
                     setTimeout(() => {
                         alert(userMessage);

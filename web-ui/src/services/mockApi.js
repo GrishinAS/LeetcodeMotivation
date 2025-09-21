@@ -203,7 +203,7 @@ export const mockApi = {
       return mockApi.getCosts(config.params || {});
     }
     
-    if (url.includes('/api/rewards')) {
+    if (url.includes('/api/redeem/list')) {
       return mockApi.getRewards();
     }
     

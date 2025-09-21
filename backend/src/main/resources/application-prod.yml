@@ -29,6 +29,8 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://leetcode-motivation.vercel.app}
 
+  base-url: http://localhost:6084/api
+
 # Health check and metrics
 management:
   endpoints:
