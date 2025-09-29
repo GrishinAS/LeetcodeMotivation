@@ -199,7 +199,7 @@ export const mockApi = {
       return mockApi.syncStats(config.params || {});
     }
     
-    if (url.includes('/api/leetcode/costs')) {
+    if (url.includes('/api/redeem/costs')) {
       return mockApi.getCosts(config.params || {});
     }
     
