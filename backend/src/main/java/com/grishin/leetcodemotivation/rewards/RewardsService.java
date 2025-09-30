@@ -53,6 +53,7 @@ public class RewardsService {
     }
 
     public List<Reward> getRedeemList() {
+        log.info("Retrieving rewards list with base url {}", baseUrl);
         List<Reward> items = rewardsConfig.getItems();
         return items.stream().map(reward -> new Reward(
                 reward.getId(), reward.getTitle(), reward.getDescription(), reward.getPointCost(),
