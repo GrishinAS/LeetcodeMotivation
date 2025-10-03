@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios, { fetchCsrfToken } from './axiosConfig';
 import './Login.css';
 
 const API_HOST = process.env.REACT_APP_API_HOST;
@@ -13,7 +12,6 @@ const Login = ({ onLogin }) => {
     useEffect(() => {
         sessionStorage.removeItem('jwtToken');
         sessionStorage.removeItem('userData');
-        sessionStorage.removeItem('csrfToken');
     }, []);
 
     const handleLogin = async () => {
@@ -21,24 +19,13 @@ const Login = ({ onLogin }) => {
             // Clear any existing auth data before attempting login
             sessionStorage.removeItem('jwtToken');
             sessionStorage.removeItem('userData');
-            sessionStorage.removeItem('csrfToken');
             
             setError('');
-            await fetchCsrfToken();
 
             const response = await axios.post(`${API_HOST}/api/user/login`, { email, password });
             const { jwtToken, ...userData } = response.data;
             sessionStorage.setItem('jwtToken', jwtToken);
             sessionStorage.setItem('userData', JSON.stringify(userData));
-            
-            // // Fetch a fresh CSRF token after successful login to ensure subsequent requests work
-            // try {
-            //     await fetchCsrfToken();
-            //     console.log('Fresh CSRF token obtained after login');
-            // } catch (csrfErr) {
-            //     console.warn('Failed to obtain fresh CSRF token after login:', csrfErr);
-            //     // Don't fail the login process, but log the warning
-            // }
             
             onLogin(response.data);
         } catch (err) {

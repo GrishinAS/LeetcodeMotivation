@@ -12,7 +12,6 @@ console.log('Environment Config:', {
   NODE_ENV: process.env.NODE_ENV
 });
 
-// Create axios instance based on environment
 const createAxiosInstance = () => {
     if (USE_MOCK_API) {
         console.log('[CONFIG] Using Mock API for development');
@@ -22,16 +21,12 @@ const createAxiosInstance = () => {
     console.log('[CONFIG] Using Real API:', API_HOST);
     return axios.create({
         baseURL: API_HOST,
-        // Ensures cookies, including XSRF-TOKEN, are sent
-        withCredentials: true,
-        xsrfCookieName: 'XSRF-TOKEN',
-        xsrfHeaderName: 'X-XSRF-TOKEN'
+        withCredentials: true
     });
 };
 
 const axiosInstance = createAxiosInstance();
 
-// Only add interceptors for real API
 if (!USE_MOCK_API) {
     axiosInstance.interceptors.request.use((config) => {
         const jwtToken = sessionStorage.getItem('jwtToken');
@@ -45,13 +40,11 @@ if (!USE_MOCK_API) {
                     // Token is expired, remove it
                     sessionStorage.removeItem('jwtToken');
                     sessionStorage.removeItem('userData');
-                    sessionStorage.removeItem('csrfToken');
                 }
             } catch (error) {
                 // Invalid token, remove it
                 sessionStorage.removeItem('jwtToken');
                 sessionStorage.removeItem('userData');
-                sessionStorage.removeItem('csrfToken');
             }
         }
         return config;
@@ -60,9 +53,7 @@ if (!USE_MOCK_API) {
     });
 }
 
-// Only add response interceptor for real API
 if (!USE_MOCK_API) {
-    // Response interceptor to handle JWT errors
     axiosInstance.interceptors.response.use(
         (response) => response,
         (error) => {
@@ -73,7 +64,6 @@ if (!USE_MOCK_API) {
                 fullError: error
             });
 
-            // Check for various JWT-related errors - be more flexible with data type checking
             const errorData = error.response?.data || '';
             const errorMessage = typeof errorData === 'string' ? errorData : JSON.stringify(errorData);
 
@@ -83,7 +73,6 @@ if (!USE_MOCK_API) {
 
             sessionStorage.removeItem('jwtToken');
             sessionStorage.removeItem('userData');
-            sessionStorage.removeItem('csrfToken');
 
             if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
                 const userMessage = errorMessage.includes('JWT signature does not match')
@@ -100,17 +89,6 @@ if (!USE_MOCK_API) {
         }
     );
 }
-
-export const fetchCsrfToken = async () => {
-    console.log('Fetching fresh CSRF token...');
-    try {
-        await axiosInstance.get('/api/user/csrf');
-        console.log('CSRF token refreshed successfully');
-    } catch (error) {
-        console.error('Failed to fetch CSRF token:', error);
-        throw error;
-    }
-};
 
 
 export default axiosInstance;

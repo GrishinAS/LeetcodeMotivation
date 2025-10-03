@@ -103,15 +103,6 @@ export const mockApi = {
     };
   },
 
-  // CSRF token
-  getCsrf: async () => {
-    await delay(100);
-    return {
-      data: { token: 'mock-csrf-token-' + Date.now() },
-      status: 200
-    };
-  },
-
   // Stats
   getStats: async (params) => {
     await delay();
@@ -185,10 +176,6 @@ export const mockApi = {
     
     if (url.includes('/api/user/signup')) {
       return mockApi.signup(config.data);
-    }
-    
-    if (url.includes('/api/user/csrf')) {
-      return mockApi.getCsrf();
     }
     
     if (url.includes('/api/leetcode/stats')) {

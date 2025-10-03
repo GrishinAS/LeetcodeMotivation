@@ -27,13 +27,11 @@ const App = () => {
                         // Token expired, remove all auth data
                         sessionStorage.removeItem('jwtToken');
                         sessionStorage.removeItem('userData');
-                        sessionStorage.removeItem('csrfToken');
                     }
                 } catch (error) {
                     // Invalid token or userData, remove all auth data
                     sessionStorage.removeItem('jwtToken');
                     sessionStorage.removeItem('userData');
-                    sessionStorage.removeItem('csrfToken');
                 }
             }
             setLoading(false);
@@ -50,7 +48,6 @@ const App = () => {
         setUser(null);
         sessionStorage.removeItem('jwtToken');
         sessionStorage.removeItem('userData');
-        sessionStorage.removeItem('csrfToken');
     };
 
     // Add a window event listener for auth failures from axios interceptor

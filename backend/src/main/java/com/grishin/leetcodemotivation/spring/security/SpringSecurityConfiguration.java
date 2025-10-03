@@ -11,14 +11,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -48,20 +46,14 @@ public class SpringSecurityConfiguration
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        tokenRepository.setCookiePath("/");
 
 
         return http
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(tokenRepository)
-                        .csrfTokenRequestHandler(new CustomCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers("/user/login", "/user/signup"))
+                .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/user/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/error/**").permitAll()
@@ -87,7 +79,7 @@ public class SpringSecurityConfiguration
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET","POST", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "X-CSRF-Token", "X-XSRF-TOKEN", "Cookie", "X-Content-Type-Options", "Authorization"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Cookie", "X-Content-Type-Options", "Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -97,21 +89,3 @@ public class SpringSecurityConfiguration
 
 
 }
-final class CustomCsrfTokenRequestHandler extends CsrfTokenRequestAttributeHandler  {
-    @Override
-    public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
-        String actualToken = request.getHeader(csrfToken.getHeaderName());
-        if (actualToken != null) {
-            return actualToken;
-        }
-
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals("XSRF-TOKEN")) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return request.getParameter(csrfToken.getParameterName());
-    }
-    }
