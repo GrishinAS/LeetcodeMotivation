@@ -28,7 +28,7 @@ public class RewardsController {
         return ResponseEntity.ok(rewardsService.getRedeemList());
     }
 
-    @PostMapping("/redeem")
+    @PostMapping
     public void redeemPoints(@RequestParam String username, @RequestParam String rewardId) {
         rewardsService.redeemPoints(username, rewardId);
     }

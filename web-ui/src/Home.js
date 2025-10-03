@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import { Link } from 'react-router-dom';
-import axios, { retryWithFreshCsrf } from './axiosConfig';
 import './Home.css';
 
 
@@ -71,15 +70,13 @@ const Home = ({ username, onLogout }) => {
     const handleSync = async () => {
         try {
             setError('');
-            
-            const response = await retryWithFreshCsrf(async () => {
-                return await axios.post('/api/leetcode/sync', {
-                    skippedEasy: skippedTasks.easy,
-                    skippedMedium: skippedTasks.medium,
-                    skippedHard: skippedTasks.hard
-                }, { params: { username } });
-            });
-            
+
+            const response = await axios.post('/api/leetcode/sync', {
+                skippedEasy: skippedTasks.easy,
+                skippedMedium: skippedTasks.medium,
+                skippedHard: skippedTasks.hard
+            }, {params: {username}});
+
             setStats(response.data.newStat);
             setPreviousStats(response.data.oldStat);
             setLastSync(Date.parse(response.data.lastSync));

@@ -137,23 +137,5 @@ export const fetchCsrfToken = async () => {
     }
 };
 
-// Global function to retry requests with fresh CSRF token
-export const retryWithFreshCsrf = async (requestFunction) => {
-    try {
-        return await requestFunction();
-    } catch (error) {
-        if (error.response?.status === 403 && 
-            (error.response?.data?.includes?.('CSRF') || 
-             error.message?.includes?.('CSRF') ||
-             error.response?.statusText === 'Forbidden')) {
-            
-            console.log('CSRF error detected, refreshing token and retrying...');
-            await fetchCsrfToken();
-            return await requestFunction();
-        }
-        throw error;
-    }
-};
-
 
 export default axiosInstance;
