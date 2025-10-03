@@ -50,9 +50,6 @@ public class SpringSecurityConfiguration
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         tokenRepository.setCookiePath("/");
-        tokenRepository.setCookieCustomizer(cookie -> cookie
-                .secure(true)
-                .sameSite("None"));
 
 
         return http
@@ -62,7 +59,6 @@ public class SpringSecurityConfiguration
                         .csrfTokenRequestHandler(new CustomCsrfTokenRequestHandler())
                         .ignoringRequestMatchers("/user/login", "/user/signup"))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-//                .addFilterAfter(new CsrfCookieFilter(), JwtAuthFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/user/csrf").permitAll()

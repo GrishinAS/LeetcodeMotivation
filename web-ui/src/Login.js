@@ -31,14 +31,14 @@ const Login = ({ onLogin }) => {
             sessionStorage.setItem('jwtToken', jwtToken);
             sessionStorage.setItem('userData', JSON.stringify(userData));
             
-            // Fetch a fresh CSRF token after successful login to ensure subsequent requests work
-            try {
-                await fetchCsrfToken();
-                console.log('Fresh CSRF token obtained after login');
-            } catch (csrfErr) {
-                console.warn('Failed to obtain fresh CSRF token after login:', csrfErr);
-                // Don't fail the login process, but log the warning
-            }
+            // // Fetch a fresh CSRF token after successful login to ensure subsequent requests work
+            // try {
+            //     await fetchCsrfToken();
+            //     console.log('Fresh CSRF token obtained after login');
+            // } catch (csrfErr) {
+            //     console.warn('Failed to obtain fresh CSRF token after login:', csrfErr);
+            //     // Don't fail the login process, but log the warning
+            // }
             
             onLogin(response.data);
         } catch (err) {
