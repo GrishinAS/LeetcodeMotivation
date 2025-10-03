@@ -59,6 +59,7 @@ const Redeem = ({ username }) => {
       setRedeemedRewards(prev => new Set([...prev, reward.id]));
       const response = await axios.get('/api/redeem/list');
       setRewards(response.data);
+      fetchCurrentPoints();
       setIsRedeeming(null);
     } catch (err) {
       setError('Failed to redeem reward. Please try again.');
