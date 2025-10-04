@@ -17,8 +17,6 @@ public class LeetcodeService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private StatsRepository statsRepository;
-    @Autowired
     private LeetcodeClient leetcodeClient;
 
     @Autowired
@@ -51,18 +49,15 @@ public class LeetcodeService {
 
         SolvedTasks oldStat = user.getSolvedTasks();
         SolvedTasks currentStat = leetcodeClient.getCurrentStat(user.getLeetcodeAcc());
-        
-        // Calculate tasks solved since last sync for validation
+
         int easySinceLastSync = currentStat.getSolvedEasy() - oldStat.getSolvedEasy();
         int mediumSinceLastSync = currentStat.getSolvedMedium() - oldStat.getSolvedMedium();
         int hardSinceLastSync = currentStat.getSolvedHard() - oldStat.getSolvedHard();
-        
-        // Validate skip amounts
+
         validateSkipAmount(syncRequest.getSkippedEasy(), easySinceLastSync, "easy");
         validateSkipAmount(syncRequest.getSkippedMedium(), mediumSinceLastSync, "medium");
         validateSkipAmount(syncRequest.getSkippedHard(), hardSinceLastSync, "hard");
-        
-        // Calculate points earned since last sync (subtract skipped tasks)
+
         int easyPointsEarned = Math.max(0, easySinceLastSync - syncRequest.getSkippedEasy()) * costs.getEasyCost();
         int mediumPointsEarned = Math.max(0, mediumSinceLastSync - syncRequest.getSkippedMedium()) * costs.getMediumCost();
         int hardPointsEarned = Math.max(0, hardSinceLastSync - syncRequest.getSkippedHard()) * costs.getHardCost();
