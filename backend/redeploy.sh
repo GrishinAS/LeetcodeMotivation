@@ -4,7 +4,6 @@
 git stash
 git pull
 git stash pop
-./gradlew bootJar
-./gradlew --stop
+./gradlew bootJar --no-daemon
 ./start.sh
 

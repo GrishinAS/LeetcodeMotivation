@@ -18,5 +18,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd /home/ec2-user/LeetcodeMotivation/backend
-            ./redeploy.sh
+            sudo systemctl daemon-reload
+            sudo systemctl restart leetcode-app.service
