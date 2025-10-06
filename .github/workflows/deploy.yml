@@ -18,11 +18,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            set -e
             sudo systemctl stop leetcode-app.service
             cd /home/ec2-user/LeetcodeMotivation/backend
-            git stash
+            git reset --hard
             git pull
-            git stash pop
             ./gradlew bootJar --no-daemon
             sudo systemctl daemon-reload
             sudo systemctl start leetcode-app.service
