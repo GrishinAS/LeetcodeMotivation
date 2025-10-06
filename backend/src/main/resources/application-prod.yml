@@ -29,7 +29,7 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://leetcode-motivation.vercel.app}
 
-  base-url: https://18.118.24.201/api
+  base-url: https://leetstreak.pro/api
 
 # Health check and metrics
 management:
@@ -47,7 +47,7 @@ management:
 
 # Security headers
 server:
-  port: 443
+  port: 8443
   servlet:
     session:
       cookie:
