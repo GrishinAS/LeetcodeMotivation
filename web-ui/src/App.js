@@ -5,7 +5,7 @@ import Login from './Login';
 import Signup from './Signup';
 import Redeem from './Redeem';
 import './App.css';
-import axios from "axiosConfig";
+import axios from "./axiosConfig";
 
 const App = () => {
     const [user, setUser] = useState(null);
