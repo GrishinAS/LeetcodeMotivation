@@ -5,7 +5,6 @@ spring:
     log-request-details: true
 
 server:
-  port: 6084
   servlet:
     contextPath: /api
   error:

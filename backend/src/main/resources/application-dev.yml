@@ -32,6 +32,7 @@ logging:
 
 # Development server settings
 server:
+  port: 6084
   error:
     include-stacktrace: always
     include-binding-errors: always
