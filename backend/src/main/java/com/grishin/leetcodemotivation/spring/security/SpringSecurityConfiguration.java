@@ -1,7 +1,5 @@
 package com.grishin.leetcodemotivation.spring.security;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,8 +44,6 @@ public class SpringSecurityConfiguration
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-
-
         return http
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -87,6 +83,4 @@ public class SpringSecurityConfiguration
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-
 }
