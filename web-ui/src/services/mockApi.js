@@ -5,8 +5,7 @@ const MOCK_DELAY = 500; // Simulate network delay
 const mockUser = {
   username: process.env.REACT_APP_MOCK_USERNAME || 'testuser',
   email: process.env.REACT_APP_MOCK_EMAIL || 'test@example.com',
-  leetcodeAcc: process.env.REACT_APP_MOCK_LEETCODE_ACC || 'testleetcode',
-  jwtToken: 'mock-jwt-token-' + Date.now()
+  leetcodeAcc: process.env.REACT_APP_MOCK_LEETCODE_ACC || 'testleetcode'
 };
 
 // Mock stats data

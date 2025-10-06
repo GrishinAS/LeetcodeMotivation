@@ -12,8 +12,8 @@ const Redeem = ({ username }) => {
   const [rewards, setRewards] = useState(null);
 
   useEffect(() => {
-    fetchCurrentPoints();
-    fetchRewards();
+    fetchCurrentPoints().catch(err => console.error(err));
+    fetchRewards().catch(err => console.error(err));
   }, [username]);
 
   const fetchCurrentPoints = async () => {

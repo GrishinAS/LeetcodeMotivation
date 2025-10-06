@@ -5,74 +5,78 @@ import Login from './Login';
 import Signup from './Signup';
 import Redeem from './Redeem';
 import './App.css';
+import axios from "axiosConfig";
 
 const App = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuthStatus = () => {
-            const jwtToken = sessionStorage.getItem('jwtToken');
+        const checkAuthStatus = async () => {
             const userData = sessionStorage.getItem('userData');
-            
-            if (jwtToken && userData) {
+
+            if (userData) {
                 try {
-                    // Decode JWT token to check expiration
-                    const payload = JSON.parse(atob(jwtToken.split('.')[1]));
-                    if (payload.exp > Date.now() / 1000) {
-                        // Token is valid, restore user data
-                        const parsedUserData = JSON.parse(userData);
-                        setUser(parsedUserData);
-                    } else {
-                        // Token expired, remove all auth data
-                        sessionStorage.removeItem('jwtToken');
-                        sessionStorage.removeItem('userData');
-                    }
+                    const response = await axios.get(`/api/user/me`);
+
+                    const parsedUserData = response.data;
+                    setUser(parsedUserData);
+
+                    sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
                 } catch (error) {
-                    // Invalid token or userData, remove all auth data
-                    sessionStorage.removeItem('jwtToken');
+                    console.error('Session validation failed:', error);
                     sessionStorage.removeItem('userData');
+                    setUser(null);
+                }
+            } else {
+                // No userData stored, try to get current user from session
+                try {
+                    const response = await axios.get(`/api/user/me`);
+
+                    const parsedUserData = response.data;
+                    setUser(parsedUserData);
+                    sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
+                } catch (error) {
+                    setUser(null);
                 }
             }
             setLoading(false);
         };
 
-        checkAuthStatus();
+        checkAuthStatus().catch(err => console.error(err));
     }, []);
 
     const handleLogin = (userData) => {
         setUser(userData);
+        sessionStorage.setItem('userData', JSON.stringify(userData));
     };
 
-    const handleLogout = () => {
-        setUser(null);
-        sessionStorage.removeItem('jwtToken');
-        sessionStorage.removeItem('userData');
+    const handleLogout = async () => {
+        try {
+            await axios.post(`/api/user/logout`, {});
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            sessionStorage.removeItem('userData');
+        }
     };
 
-    // Add a window event listener for auth failures from axios interceptor
     useEffect(() => {
-        const handleStorageChange = (e) => {
-            // If JWT token is removed (by axios interceptor), update user state
-            if (e.key === 'jwtToken' && e.newValue === null) {
-                setUser(null);
+        const checkAuthStatus = async () => {
+            if (user) {
+                try {
+                    await axios.get(`/api/user/me`);
+                } catch (error) {
+                    setUser(null);
+                    sessionStorage.removeItem('userData');
+                }
             }
         };
 
-        // Also check if sessionStorage was cleared by axios interceptor
-        const checkAuthStatus = () => {
-            if (user && !sessionStorage.getItem('jwtToken')) {
-                setUser(null);
-            }
-        };
+        const authChecker = setInterval(checkAuthStatus, 5 * 60 * 1000);
 
-        // Check every 5 seconds if user state is out of sync
-        const authChecker = setInterval(checkAuthStatus, 20000);
-        
-        window.addEventListener('storage', handleStorageChange);
-        
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
             clearInterval(authChecker);
         };
     }, [user]);

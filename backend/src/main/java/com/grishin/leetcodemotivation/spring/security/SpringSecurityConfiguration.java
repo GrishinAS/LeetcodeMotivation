@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,14 +29,12 @@ import java.util.List;
 public class SpringSecurityConfiguration
 {
     private final UserDetailsServiceImpl userDetailsService;
-    private final JwtAuthFilter jwtAuthFilter;
     
     @Value("${app.cors.allowed-origins}")
     private List<String> allowedOrigins;
 
-    public SpringSecurityConfiguration(UserDetailsServiceImpl userDetailsService, JwtAuthFilter jwtAuthFilter) {
+    public SpringSecurityConfiguration(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
@@ -46,17 +46,30 @@ public class SpringSecurityConfiguration
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/signup").permitAll()
                         .requestMatchers(HttpMethod.POST, "/user/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/error/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(3)
+                        .maxSessionsPreventsLogin(false))
                 .authenticationManager(authenticationManager)
-
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(logout -> logout
+                        .logoutUrl("/user/logout")
+                        .deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpStatus.OK.value());
+                        }))
                 .exceptionHandling(handler -> handler.authenticationEntryPoint((request, response, exception) ->
                                 response.sendError(HttpStatus.FORBIDDEN.value(), exception.getMessage()))
                         .accessDeniedHandler((request, response, exception) ->

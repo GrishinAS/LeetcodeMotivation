@@ -28,32 +28,6 @@ const createAxiosInstance = () => {
 const axiosInstance = createAxiosInstance();
 
 if (!USE_MOCK_API) {
-    axiosInstance.interceptors.request.use((config) => {
-        const jwtToken = sessionStorage.getItem('jwtToken');
-        if (jwtToken) {
-            try {
-                // Check if token is expired before adding it to request
-                const payload = JSON.parse(atob(jwtToken.split('.')[1]));
-                if (payload.exp > Date.now() / 1000) {
-                    config.headers['Authorization'] = "Bearer " + jwtToken;
-                } else {
-                    // Token is expired, remove it
-                    sessionStorage.removeItem('jwtToken');
-                    sessionStorage.removeItem('userData');
-                }
-            } catch (error) {
-                // Invalid token, remove it
-                sessionStorage.removeItem('jwtToken');
-                sessionStorage.removeItem('userData');
-            }
-        }
-        return config;
-    }, (error) => {
-        return Promise.reject(error);
-    });
-}
-
-if (!USE_MOCK_API) {
     axiosInstance.interceptors.response.use(
         (response) => response,
         (error) => {
@@ -67,20 +41,12 @@ if (!USE_MOCK_API) {
             const errorData = error.response?.data || '';
             const errorMessage = typeof errorData === 'string' ? errorData : JSON.stringify(errorData);
 
-            console.warn('JWT authentication failed, redirecting to login:', {
-                errorData: error.response?.data
-            });
-
-            sessionStorage.removeItem('jwtToken');
             sessionStorage.removeItem('userData');
 
             if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
-                const userMessage = errorMessage.includes('JWT signature does not match')
-                    ? 'User token has expired. Please log in again.'
-                    : 'Forbidden.';
 
                 setTimeout(() => {
-                    alert(userMessage);
+                    alert("Auth issue: " + errorMessage);
                     window.location.href = '/login';
                 }, 100);
             }

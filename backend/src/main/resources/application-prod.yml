@@ -50,6 +50,7 @@ server:
   port: 8443
   servlet:
     session:
+      timeout: 3h
       cookie:
         secure: true
         http-only: true
