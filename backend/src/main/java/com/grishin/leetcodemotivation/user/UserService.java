@@ -5,12 +5,16 @@ import com.grishin.leetcodemotivation.stats.dto.SolvedTasks;
 import com.grishin.leetcodemotivation.user.dto.LoginRequest;
 import com.grishin.leetcodemotivation.user.dto.SignupRequest;
 import com.grishin.leetcodemotivation.user.dto.User;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,8 +36,14 @@ public class UserService {
     @Autowired
     private LeetcodeClient leetcodeClient;
 
-    public User login(@Valid LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+    public User login(@Valid LoginRequest request, HttpServletRequest httpRequest) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        HttpSession session = httpRequest.getSession(true);
+        session.setAttribute("SPRING_SECURITY_CONTEXT",
+                SecurityContextHolder.getContext());
+
         Optional<User> existingUser = userRepository.findByEmail(request.email());
         if (existingUser.isEmpty()) throw new UsernameNotFoundException("User " + request.email() + " is not found");
         return existingUser.get();
@@ -53,5 +63,9 @@ public class UserService {
         user.setSolvedTasks(currentStat);
         userRepository.saveAndFlush(user);
         log.info("Account {} successfully saved", request.username());
+    }
+
+    public Optional<User> findUser(String email) {
+        return userRepository.findByEmail(email);
     }
 }

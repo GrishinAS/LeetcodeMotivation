@@ -5,74 +5,73 @@ import Login from './Login';
 import Signup from './Signup';
 import Redeem from './Redeem';
 import './App.css';
+import axios from "./axiosConfig";
+
+const SESSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 const App = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuthStatus = () => {
-            const jwtToken = sessionStorage.getItem('jwtToken');
+        const checkAuthStatus = async () => {
             const userData = sessionStorage.getItem('userData');
-            
-            if (jwtToken && userData) {
-                try {
-                    // Decode JWT token to check expiration
-                    const payload = JSON.parse(atob(jwtToken.split('.')[1]));
-                    if (payload.exp > Date.now() / 1000) {
-                        // Token is valid, restore user data
-                        const parsedUserData = JSON.parse(userData);
-                        setUser(parsedUserData);
-                    } else {
-                        // Token expired, remove all auth data
-                        sessionStorage.removeItem('jwtToken');
-                        sessionStorage.removeItem('userData');
-                    }
-                } catch (error) {
-                    // Invalid token or userData, remove all auth data
-                    sessionStorage.removeItem('jwtToken');
-                    sessionStorage.removeItem('userData');
+
+            try {
+                const response = await axios.get(`/api/user/me`);
+                const parsedUserData = response.data;
+                setUser(parsedUserData);
+                sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
+            } catch (error) {
+                // Expected behavior when no valid session exists
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    console.log('No valid session found, user will need to log in');
+                } else {
+                    console.error('Unexpected error during session check:', error);
                 }
+                
+                // Clear any stale session data and set user to null
+                sessionStorage.removeItem('userData');
+                setUser(null);
             }
+            
             setLoading(false);
         };
 
-        checkAuthStatus();
+        checkAuthStatus().catch(err => console.error(err));
     }, []);
 
     const handleLogin = (userData) => {
         setUser(userData);
+        sessionStorage.setItem('userData', JSON.stringify(userData));
     };
 
-    const handleLogout = () => {
-        setUser(null);
-        sessionStorage.removeItem('jwtToken');
-        sessionStorage.removeItem('userData');
+    const handleLogout = async () => {
+        try {
+            await axios.post(`/api/user/logout`, {});
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+            sessionStorage.removeItem('userData');
+        }
     };
 
-    // Add a window event listener for auth failures from axios interceptor
     useEffect(() => {
-        const handleStorageChange = (e) => {
-            // If JWT token is removed (by axios interceptor), update user state
-            if (e.key === 'jwtToken' && e.newValue === null) {
-                setUser(null);
+        const checkAuthStatus = async () => {
+            if (user) {
+                try {
+                    await axios.get(`/api/user/me`);
+                } catch (error) {
+                    setUser(null);
+                    sessionStorage.removeItem('userData');
+                }
             }
         };
 
-        // Also check if sessionStorage was cleared by axios interceptor
-        const checkAuthStatus = () => {
-            if (user && !sessionStorage.getItem('jwtToken')) {
-                setUser(null);
-            }
-        };
+        const authChecker = setInterval(checkAuthStatus, SESSION_CHECK_INTERVAL_MS);
 
-        // Check every 5 seconds if user state is out of sync
-        const authChecker = setInterval(checkAuthStatus, 20000);
-        
-        window.addEventListener('storage', handleStorageChange);
-        
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
             clearInterval(authChecker);
         };
     }, [user]);

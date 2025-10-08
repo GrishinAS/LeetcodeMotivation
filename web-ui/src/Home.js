@@ -44,8 +44,8 @@ const Home = ({ username, onLogout }) => {
             }
         };
 
-        fetchStats();
-        fetchCosts();
+        fetchStats().catch(err => console.error(err));
+        fetchCosts().catch(err => console.error(err));
     }, [username]);
 
 

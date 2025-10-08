@@ -9,24 +9,21 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    // Clear any existing auth data when component mounts
+
     useEffect(() => {
-        sessionStorage.removeItem('jwtToken');
         sessionStorage.removeItem('userData');
     }, []);
 
     const handleLogin = async () => {
         try {
-            // Clear any existing auth data before attempting login
-            sessionStorage.removeItem('jwtToken');
             sessionStorage.removeItem('userData');
-            
             setError('');
-
-            const response = await axios.post(`${API_HOST}/api/user/login`, { email, password });
-            const { jwtToken, ...userData } = response.data;
-            sessionStorage.setItem('jwtToken', jwtToken);
-            sessionStorage.setItem('userData', JSON.stringify(userData));
+            const response = await axios.post(`${API_HOST}/api/user/login`,
+                { email, password },
+                {
+                    withCredentials: true
+                });
+            sessionStorage.setItem('userData', JSON.stringify(response.data));
             
             onLogin(response.data);
         } catch (err) {
