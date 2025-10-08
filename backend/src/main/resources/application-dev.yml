@@ -36,3 +36,11 @@ server:
   error:
     include-stacktrace: always
     include-binding-errors: always
+  servlet:
+    contextPath: /api
+    session:
+      timeout: 24h
+      cookie:
+        secure: false
+        http-only: true
+        same-site: lax

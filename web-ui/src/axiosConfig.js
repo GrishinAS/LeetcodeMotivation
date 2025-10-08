@@ -59,7 +59,6 @@ if (!USE_MOCK_API) {
             });
 
             const errorData = error.response?.data || '';
-            const errorMessage = typeof errorData === 'string' ? errorData : JSON.stringify(errorData);
 
             sessionStorage.removeItem('userData');
 
