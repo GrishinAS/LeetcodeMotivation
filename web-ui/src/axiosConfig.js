@@ -43,7 +43,7 @@ if (!USE_MOCK_API) {
 
             sessionStorage.removeItem('userData');
 
-            if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/signup' && window.location.pathname !== '/') {
 
                 setTimeout(() => {
                     alert("Auth issue: " + errorMessage);

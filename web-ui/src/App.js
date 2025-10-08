@@ -15,31 +15,24 @@ const App = () => {
         const checkAuthStatus = async () => {
             const userData = sessionStorage.getItem('userData');
 
-            if (userData) {
-                try {
-                    const response = await axios.get(`/api/user/me`);
-
-                    const parsedUserData = response.data;
-                    setUser(parsedUserData);
-
-                    sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
-                } catch (error) {
-                    console.error('Session validation failed:', error);
-                    sessionStorage.removeItem('userData');
-                    setUser(null);
+            try {
+                const response = await axios.get(`/api/user/me`);
+                const parsedUserData = response.data;
+                setUser(parsedUserData);
+                sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
+            } catch (error) {
+                // Expected behavior when no valid session exists
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    console.log('No valid session found, user will need to log in');
+                } else {
+                    console.error('Unexpected error during session check:', error);
                 }
-            } else {
-                // No userData stored, try to get current user from session
-                try {
-                    const response = await axios.get(`/api/user/me`);
-
-                    const parsedUserData = response.data;
-                    setUser(parsedUserData);
-                    sessionStorage.setItem('userData', JSON.stringify(parsedUserData));
-                } catch (error) {
-                    setUser(null);
-                }
+                
+                // Clear any stale session data and set user to null
+                sessionStorage.removeItem('userData');
+                setUser(null);
             }
+            
             setLoading(false);
         };
 
