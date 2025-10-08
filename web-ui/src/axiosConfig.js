@@ -43,10 +43,11 @@ if (!USE_MOCK_API) {
 
             sessionStorage.removeItem('userData');
 
-            if (window.location.pathname !== '/login' && window.location.pathname !== '/signup' && window.location.pathname !== '/') {
+            const allowedPaths = ['/login', '/signup', '/'];
+            if (!allowedPaths.includes(window.location.pathname)) {
 
                 setTimeout(() => {
-                    alert("Auth issue: " + errorMessage);
+                    alert("Authentication failed. Please log in again.");
                     window.location.href = '/login';
                 }, 100);
             }

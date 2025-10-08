@@ -7,6 +7,8 @@ import Redeem from './Redeem';
 import './App.css';
 import axios from "./axiosConfig";
 
+const SESSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+
 const App = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ const App = () => {
             }
         };
 
-        const authChecker = setInterval(checkAuthStatus, 5 * 60 * 1000);
+        const authChecker = setInterval(checkAuthStatus, SESSION_CHECK_INTERVAL_MS);
 
         return () => {
             clearInterval(authChecker);
