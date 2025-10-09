@@ -50,7 +50,6 @@ public class SpringSecurityConfiguration
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(repository)
-                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .ignoringRequestMatchers("/user/login", "/user/signup"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
