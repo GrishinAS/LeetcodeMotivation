@@ -52,6 +52,13 @@ rewards:
     - id: game-wallet-10
       title: Game Wallet $10
       description: $10 credit for Steam, PlayStation, or Xbox
-      pointCost: 1000
+      pointCost: 1500
       image: /images/game-wallet.jpg
+      category: gaming
+
+    - id: hall-pass
+      title: Hall Pass
+      description: Allow yourself to break one of the self-imposed rules for a day
+      pointCost: 1200
+      image: /images/freedom_eagle.png
       category: gaming
