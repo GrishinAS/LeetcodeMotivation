@@ -50,6 +50,7 @@ public class SpringSecurityConfiguration
                 .cors(cors -> cors.configurationSource(apiConfigurationSource()))
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(repository)
+                        .csrfTokenRequestHandler(new CookieCsrfTokenRequestHandler())
                         .ignoringRequestMatchers("/user/login", "/user/signup"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/images/**").permitAll()
@@ -66,7 +67,7 @@ public class SpringSecurityConfiguration
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(logout -> logout
                         .logoutUrl("/user/logout")
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies("JSESSIONID", "X-XSRF-TOKEN")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .logoutSuccessHandler((request, response, authentication) -> {

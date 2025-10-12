@@ -24,24 +24,6 @@ const createAxiosInstance = () => {
         withCredentials: true
     });
 
-    // Add CSRF token handling
-    instance.interceptors.request.use(
-        (config) => {
-            // Get CSRF token from cookie
-            const csrfToken = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('XSRF-TOKEN='))
-                ?.split('=')[1];
-            
-            if (csrfToken) {
-                config.headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
-            }
-            
-            return config;
-        },
-        (error) => Promise.reject(error)
-    );
-
     return instance;
 };
 
