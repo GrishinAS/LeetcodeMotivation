@@ -4,113 +4,81 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LeetCode Motivation is a full-stack web application that tracks LeetCode progress and provides monetary rewards for solved problems. The system consists of a Spring Boot backend and a React frontend.
+LeetCode Motivation is a full-stack web application that tracks LeetCode progress and awards points redeemable for real-world rewards. Backend is Spring Boot, frontend is React.
 
-## Architecture
-
-### Backend (Java Spring Boot)
-- **Location**: `/backend`
-- **Framework**: Spring Boot 3.3.1 with Java 21
-- **Database**: SQLite with JPA/Hibernate
-- **Security**: Session-based authentication with persistent cookies and CSRF protection
-- **API**: REST endpoints served at `/api` context path (port 6084)
-
-#### Key Components:
-- **User Management**: Registration, login, session management (`user/` package)
-- **Stats Tracking**: LeetCode API integration for problem-solving statistics (`stats/` package)
-- **Payment System**: Point calculation and reward distribution (`payment/` package)
-- **Security Layer**: Session management, CSRF handling, CORS configuration (`spring/security/` package)
-
-#### Reward System:
-- Easy problems: 3 points × 10 = 30 cents
-- Medium problems: 10 points × 10 = $1.00  
-- Hard problems: 25 points × 10 = $2.50
-
-### Frontend (React)
-- **Location**: `/web-ui`
-- **Framework**: React 18 with React Router
-- **Styling**: CSS modules
-- **HTTP Client**: Axios with session cookies and CSRF token handling
-- **State**: Local component state (no global state management)
-
-#### Key Features:
-- Authentication flow (login/signup/logout)
-- Stats dashboard showing LeetCode progress
-- Point redemption interface
-- CSRF protection with automatic token handling
+Production domain: `leetstreak.pro`. Frontend hosted on Vercel (`leetcode-motivation.vercel.app`).
 
 ## Development Commands
 
 ### Backend
+
 ```bash
 cd backend
 
-# Run the application
-./gradlew bootRun
+# Run with dev profile (SQLite, port 6084)
+./gradlew bootRun --args='--spring.profiles.active=dev'
 
-# Build the project
+# Build
 ./gradlew build
 
-# Run tests
+# Run all tests
 ./gradlew test
 
-# Clean build
-./gradlew clean build
+# Run a single test class
+./gradlew test --tests "com.grishin.leetcodemotivation.stats.LeetcodeClientTest"
 ```
 
 ### Frontend
+
 ```bash
 cd web-ui
 
-# Install dependencies
 npm install
-
-# Start development server
-npm start
-
-# Build for production
+npm start        # dev server on port 3000
 npm run build
-
-# Run tests
-npm test
 ```
 
-## Security Implementation
+Frontend env vars (create `.env.local`):
+```
+REACT_APP_API_HOST=http://localhost:6084
+REACT_APP_ENV=development
+# Optional: REACT_APP_USE_MOCK_API=true  (bypasses real API calls)
+```
 
-The application implements a multi-layered security approach:
+## Architecture
 
-1. **Session Authentication**: Persistent HTTP-only cookies for long-term authentication (similar to Gmail)
-2. **CSRF Protection**: Cookie-based CSRF tokens for state-changing operations
-3. **CORS Configuration**: Restricted to localhost:3000 for development
-4. **Password Encryption**: BCrypt hashing for user passwords
+### Spring Boot Backend
 
-### Authentication Flow:
-1. User logs in → Backend creates server-side session and sets HTTP-only authentication cookie
-2. Authentication cookie persists across browser sessions for long-term login
-3. Frontend checks session validity via `/api/user/me` endpoint on page load
-4. CSRF token automatically handled via Axios interceptors
-5. Protected endpoints require valid session cookie and CSRF token
+**Profiles**: `dev` uses SQLite (`mydb.db`), `prod` uses PostgreSQL (via `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` env vars). Production runs on port 8443 with SSL; dev runs on port 6084 without SSL.
 
-## Database Schema
+**Package structure**:
+- `user/` — registration, login, session (`UsersController`, `UserService`, `UserRepository`, `User` entity)
+- `stats/` — LeetCode GraphQL integration (`LeetcodeClient`), sync logic (`LeetcodeService`), `Costs` config
+- `rewards/` — rewards catalog (`RewardsProperties` mapped from YAML), redemption (`RewardsService`)
+- `payment/` — `PaymentService` (currently a stub that only logs; actual payment not implemented)
+- `spring/security/` — Spring Security config, CSRF handler, `UserDetailsServiceImpl`
 
-- **Users**: Username, password (hashed), LeetCode account, solved task statistics
-- **Stats**: Historical tracking of easy/medium/hard problems solved
-- SQLite database (`mydb.db`) with auto-DDL enabled
+All REST endpoints are under `/api` context path. CSRF is enforced on state-changing endpoints (except `/user/login` and `/user/signup`). CORS is restricted to origins in `app.cors.allowed-origins`.
 
-## API Integration
+**Point system** (configured in `application.yml`):
+- `costs.easy-cost: 100`, `medium-cost: 300`, `hard-cost: 700` — points earned per solved problem
+- `payment.point.value: 10` — cents per point when redeeming
+- Sync allows skipping problems (e.g. unsolved ones counted due to contest) — validated server-side
 
-- **LeetCode Client**: Fetches current problem-solving statistics via GraphQL
-- **Payment Service**: Handles reward distribution based on progress differences
-- **Stats Comparison**: Calculates points earned since last login
+**Rewards catalog** is defined entirely in `application.yml` under `rewards.items` and served as-is via `/api/rewards`. Images are served from `/api/images/**` (static resources in `resources/static/images/`).
 
-## Configuration
+### React Frontend
 
-### Backend (`application.properties`):
-- Server runs on port 6084 with `/api` context path
-- Debug logging enabled for development
-- Configurable point values and costs for different problem difficulties
+Routes: `/` (home/dashboard), `/login`, `/signup`, `/redeem`.
 
-### Frontend:
-- API host configured via `REACT_APP_API_HOST` environment variable
-- Automatic CSRF token handling in Axios configuration
-- Persistent session cookie authentication with automatic session restoration
+`axiosConfig.js` creates the Axios instance. Set `REACT_APP_USE_MOCK_API=true` to use `services/mockApi.js` instead of the real backend. Any non-2xx response clears session storage and redirects to `/login` (with a 100ms delay to allow the error to surface).
+
+Session validity is checked via `GET /api/user/me` on page load and polled every 5 minutes while the user is logged in.
+
+CSRF: The `XSRF-TOKEN` cookie is set by the backend with `SameSite=None`; POST requests must include it in the `X-XSRF-TOKEN` header.
+
+## Key Configuration Notes
+
+- Production CORS origin is set via `CORS_ALLOWED_ORIGINS` env var (defaults to Vercel URL)
+- `LeetcodeClientTest` makes real HTTP calls to LeetCode's GraphQL API and the `loginWithGoogle` test requires ChromeDriver — these are not unit tests
+- Session timeout is 24h in both profiles; dev cookies are `secure: false`, prod cookies are `secure: true, same-site: none`
