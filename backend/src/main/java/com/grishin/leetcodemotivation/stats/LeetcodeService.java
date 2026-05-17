@@ -67,8 +67,7 @@ public class LeetcodeService {
         int newTotalPoints = user.getCurrentPoints() + pointsEarned;
         user.setCurrentPoints(newTotalPoints);
 
-        currentStat.setId(oldStat.getId());
-        currentStat.setLastSync(new java.util.Date());
+        currentStat.setLastSync(java.time.Instant.now());
         user.setSolvedTasks(currentStat);
 
         userRepository.save(user);

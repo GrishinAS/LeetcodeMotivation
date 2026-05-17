@@ -24,33 +24,52 @@ repositories {
 }
 
 dependencies {
-
+	// Web + GraphQL (WebFlux used by HttpGraphQlClient for LeetCode API calls)
 	implementation 'org.springframework.boot:spring-boot-starter-graphql'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.graphql:spring-graphql-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// swagger
-	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 
-	//	Database
+	// AWS Lambda container handler
+	implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.0.3'
+
+	// PostgreSQL + JPA
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.hibernate.orm:hibernate-community-dialects'
-	implementation 'org.hibernate.validator:hibernate-validator'
-	implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
-    implementation 'org.postgresql:postgresql:42.7.5'
+	runtimeOnly 'org.postgresql:postgresql'
 
-	// authorization
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+	// Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    implementation 'org.seleniumhq.selenium:selenium-java:4.35.0'
-
+	// Selenium only needed for integration tests
+	testImplementation 'org.seleniumhq.selenium:selenium-java:4.35.0'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Lambda deployment ZIP: classes + resources at root, dependencies in lib/
+task buildZip(type: Zip) {
+	archiveFileName = 'app-lambda.zip'
+	destinationDirectory = layout.buildDirectory.dir('distributions')
+	from compileJava
+	from processResources
+	into('lib') {
+		from configurations.runtimeClasspath
+	}
+}
+
+build.dependsOn buildZip

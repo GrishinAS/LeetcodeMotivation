@@ -53,6 +53,7 @@ const App = () => {
             console.error('Logout error:', error);
         } finally {
             setUser(null);
+            localStorage.removeItem('jwt');
             sessionStorage.removeItem('userData');
         }
     };

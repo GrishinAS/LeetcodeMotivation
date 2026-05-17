@@ -1,11 +1,11 @@
 package com.grishin.leetcodemotivation.stats.dto;
 
-import java.util.Date;
+import java.time.Instant;
 
 public record StatsResponse(
         SolvedTasks oldStat,
         SolvedTasks newStat,
-        Date lastSync,
+        Instant lastSync,
         Integer currentPoints
 ) {
 }

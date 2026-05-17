@@ -1,10 +1,10 @@
 package com.grishin.leetcodemotivation.user;
 
+import com.grishin.leetcodemotivation.spring.security.JwtService;
 import com.grishin.leetcodemotivation.user.dto.LoginRequest;
 import com.grishin.leetcodemotivation.user.dto.LoginResponse;
 import com.grishin.leetcodemotivation.user.dto.SignupRequest;
 import com.grishin.leetcodemotivation.user.dto.User;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,13 +21,14 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        User user = userService.login(request, httpRequest);
-        LoginResponse body = new LoginResponse(
-                user.getUsername(),
-                user.getEmail(),
-                user.getLeetcodeAcc());
+    @Autowired
+    private JwtService jwtService;
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        User user = userService.login(request);
+        String token = jwtService.generateToken(user.getEmail());
+        LoginResponse body = new LoginResponse(user.getUsername(), user.getEmail(), user.getLeetcodeAcc(), token);
         return ResponseEntity.ok(body);
     }
 
@@ -51,5 +52,11 @@ public class UsersController {
         }
 
         return ResponseEntity.ok(user.get());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        // JWT is stateless — actual logout is handled client-side by discarding the token
+        return ResponseEntity.ok().build();
     }
 }

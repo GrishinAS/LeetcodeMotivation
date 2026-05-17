@@ -1,0 +1,299 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  LeetCode Motivation — serverless backend.
+  Lambda + API Gateway HTTP API + Google Cloud SQL (PostgreSQL).
+  Includes a budget enforcer that sets Lambda concurrency to 0 when monthly spend exceeds the limit.
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: S3 bucket containing the Lambda deployment ZIP
+
+  S3Key:
+    Type: String
+    Default: app-lambda.zip
+    Description: S3 key of the Lambda deployment ZIP
+
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: Secret key for JWT signing (min 32 characters)
+
+  CorsAllowedOrigins:
+    Type: String
+    Default: https://leetcode-motivation.vercel.app
+    Description: Comma-separated list of allowed CORS origins
+
+  AlertEmail:
+    Type: String
+    Description: Email address for budget alerts
+
+  MonthlyBudgetLimitUsd:
+    Type: Number
+    Default: 1
+    Description: Monthly spend limit in USD — Lambda concurrency is set to 0 when exceeded
+
+  LambdaMemoryMb:
+    Type: Number
+    Default: 512
+    Description: Lambda memory in MB (higher = faster cold start, more GB-seconds used)
+
+  LambdaTimeoutSeconds:
+    Type: Number
+    Default: 30
+    Description: Lambda timeout in seconds (must cover Spring Boot cold start ~5-15s)
+
+  LambdaReservedConcurrency:
+    Type: Number
+    Default: 0
+    Description: >
+      Max concurrent Lambda executions — hard cap to prevent runaway billing.
+      Set to 0 to skip reserving concurrency (required for new accounts with ≤10 total executions).
+
+  DbUrl:
+    Type: String
+    Description: >
+      JDBC URL for Google Cloud SQL PostgreSQL, e.g.
+      jdbc:postgresql://<public-ip>:5432/<dbname>?ssl=true&sslmode=require
+    NoEcho: false
+
+  DbUsername:
+    Type: String
+    Description: PostgreSQL username
+
+  DbPassword:
+    Type: String
+    NoEcho: true
+    Description: PostgreSQL password
+
+Conditions:
+  HasReservedConcurrency: !Not [!Equals [!Ref LambdaReservedConcurrency, 0]]
+
+Resources:
+
+  # ─── IAM: Lambda execution role ──────────────────────────────────────────────
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # ─── Lambda: main application ────────────────────────────────────────────────
+
+  AppFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-app
+      Runtime: java21
+      Handler: com.grishin.leetcodemotivation.LambdaHandler::handleRequest
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref S3BucketName
+        S3Key: !Ref S3Key
+      MemorySize: !Ref LambdaMemoryMb
+      Timeout: !Ref LambdaTimeoutSeconds
+      ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref LambdaReservedConcurrency, !Ref AWS::NoValue]
+      Environment:
+        Variables:
+          SPRING_PROFILES_ACTIVE: prod
+          JWT_SECRET: !Ref JwtSecret
+          CORS_ALLOWED_ORIGINS: !Ref CorsAllowedOrigins
+          DB_URL: !Ref DbUrl
+          DB_USERNAME: !Ref DbUsername
+          DB_PASSWORD: !Ref DbPassword
+
+  # ─── API Gateway HTTP API ─────────────────────────────────────────────────────
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-api
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref CorsAllowedOrigins
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowCredentials: true
+        MaxAge: 3600
+
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppFunction.Arn}/invocations
+      PayloadFormatVersion: '2.0'
+
+  ApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: $default
+      Target: !Sub integrations/${ApiIntegration}
+
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: $default
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  AppFunctionApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AppFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
+
+  # ─── Budget + automatic shutdown ─────────────────────────────────────────────
+
+  BudgetAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-budget-alerts
+
+  BudgetEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref BudgetAlertTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  BudgetEnforcerSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref BudgetAlertTopic
+      Protocol: lambda
+      Endpoint: !GetAtt BudgetEnforcerFunction.Arn
+
+  BudgetEnforcerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref BudgetEnforcerFunction
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref BudgetAlertTopic
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub ${AWS::StackName}-monthly-budget
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref MonthlyBudgetLimitUsd
+          Unit: USD
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: SNS
+              Address: !Ref BudgetAlertTopic
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: SNS
+              Address: !Ref BudgetAlertTopic
+
+  # ─── IAM: budget enforcer role ───────────────────────────────────────────────
+
+  BudgetEnforcerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-budget-enforcer-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SetLambdaConcurrency
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:PutFunctionConcurrency
+                  - lambda:GetFunctionConcurrency
+                Resource: !GetAtt AppFunction.Arn
+
+  # ─── Lambda: budget enforcer (Python, inline) ────────────────────────────────
+
+  BudgetEnforcerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-budget-enforcer
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt BudgetEnforcerRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          TARGET_FUNCTION_NAME: !Sub ${AWS::StackName}-app
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+
+          def handler(event, context):
+              function_name = os.environ['TARGET_FUNCTION_NAME']
+              client = boto3.client('lambda')
+
+              for record in event.get('Records', []):
+                  message = json.loads(record['Sns']['Message'])
+                  threshold = message.get('NewThreshold', 100)
+                  print(f"Budget alert: {threshold}% of limit reached for {function_name}")
+
+                  if threshold >= 100:
+                      client.put_function_concurrency(
+                          FunctionName=function_name,
+                          ReservedConcurrentExecutions=0
+                      )
+                      print(f"SHUTDOWN: Set {function_name} reserved concurrency to 0")
+                  else:
+                      print(f"WARNING: {threshold}% of budget used — no action taken yet")
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL — set this as REACT_APP_API_HOST in your frontend
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+
+  LambdaFunctionName:
+    Description: Lambda function name
+    Value: !Ref AppFunction
+
+  BudgetAlertTopicArn:
+    Description: SNS topic for budget alerts (confirm your email subscription after deploy)
+    Value: !Ref BudgetAlertTopic

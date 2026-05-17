@@ -3,6 +3,14 @@ spring:
     name: LeetcodeMotivation
   mvc:
     log-request-details: true
+  main:
+    # Servlet mode: prevents webflux from starting a Netty server.
+    # WebFlux is still used by HttpGraphQlClient for outbound LeetCode API calls.
+    web-application-type: servlet
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   servlet:
@@ -18,6 +26,10 @@ costs:
   easy-cost: 100
   medium-cost: 300
   hard-cost: 700
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 86400000
 
 rewards:
   items:

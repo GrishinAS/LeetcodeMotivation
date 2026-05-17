@@ -1,46 +1,32 @@
-# Development Profile Configuration
+# Development profile — connects to a local PostgreSQL instance
 
-spring:
-  jpa:
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  datasource:
-    driverClassName: org.sqlite.JDBC
-    url: jdbc:sqlite:mydb.db
-    username: sa
-    password: sa
-
-# CORS Configuration for Development
 app:
   cors:
     allowed-origins: http://localhost:3000,http://127.0.0.1:3000
-
   base-url: http://localhost:6084/api
-# Development-specific logging
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/leetcode_motivation}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
 logging:
   level:
-    org.springframework.security: TRACE
-    org.springframework.web.cors: TRACE
+    org.springframework.security: INFO
+    org.springframework.web: DEBUG
+    com.grishin: DEBUG
     org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: INFO
 
-# Development server settings
 server:
   port: 6084
   error:
     include-stacktrace: always
     include-binding-errors: always
   servlet:
-    contextPath: /api
     session:
       timeout: 24h
-      cookie:
-        secure: false
-        http-only: true
-        same-site: lax

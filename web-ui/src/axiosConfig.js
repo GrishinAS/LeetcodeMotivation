@@ -3,14 +3,6 @@ import { createMockAxios } from './services/mockApi';
 
 const API_HOST = process.env.REACT_APP_API_HOST;
 const USE_MOCK_API = process.env.REACT_APP_USE_MOCK_API === 'true';
-const IS_DEVELOPMENT = process.env.REACT_APP_ENV === 'development';
-
-console.log('Environment Config:', {
-  API_HOST,
-  USE_MOCK_API,
-  IS_DEVELOPMENT,
-  NODE_ENV: process.env.NODE_ENV
-});
 
 const createAxiosInstance = () => {
     if (USE_MOCK_API) {
@@ -19,44 +11,38 @@ const createAxiosInstance = () => {
     }
 
     console.log('[CONFIG] Using Real API:', API_HOST);
-    const instance = axios.create({
-        baseURL: API_HOST,
-        withCredentials: true
-    });
-
-    return instance;
+    return axios.create({ baseURL: API_HOST });
 };
 
 const axiosInstance = createAxiosInstance();
 
 if (!USE_MOCK_API) {
+    // Attach JWT from localStorage to every request
+    axiosInstance.interceptors.request.use(config => {
+        const token = localStorage.getItem('jwt');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    });
+
     axiosInstance.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            console.log('Axios interceptor caught error:', {
-                status: error.response?.status,
-                data: error.response?.data,
-                message: error.message,
-                fullError: error
-            });
-
-            const errorData = error.response?.data || '';
-
-            sessionStorage.removeItem('userData');
-
-            const allowedPaths = ['/login', '/signup', '/'];
-            if (!allowedPaths.includes(window.location.pathname)) {
-
-                setTimeout(() => {
-                    alert("Authentication failed. Please log in again.");
-                    window.location.href = '/login';
-                }, 100);
+        response => response,
+        error => {
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                localStorage.removeItem('jwt');
+                sessionStorage.removeItem('userData');
+                const allowedPaths = ['/login', '/signup', '/'];
+                if (!allowedPaths.includes(window.location.pathname)) {
+                    setTimeout(() => {
+                        alert('Session expired. Please log in again.');
+                        window.location.href = '/login';
+                    }, 100);
+                }
             }
-            
             return Promise.reject(error);
         }
     );
 }
-
 
 export default axiosInstance;

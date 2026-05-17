@@ -1,64 +1,30 @@
-spring:
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    generate-ddl: false
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-    properties:
-      hibernate:
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    # Connection Pool Settings for Production
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+# Production profile — Lambda + Google Cloud SQL PostgreSQL
+# DB_URL, DB_USERNAME, DB_PASSWORD must be set as Lambda environment variables.
 
-# CORS Configuration for Production (AWS CloudFront/ALB)
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://leetcode-motivation.vercel.app}
+  base-url: https://api.leetstreak.pro/api
 
-  base-url: https://leetstreak.pro/api
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Keep pool small — Lambda has limited memory and connections are expensive across cold starts
+      maximum-pool-size: 2
+      minimum-idle: 1
+      connection-timeout: 20000
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
-# Health check and metrics
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: when_authorized
-  metrics:
-    export:
-      cloudwatch:
-        enabled: true
+logging:
+  level:
+    root: WARN
+    com.grishin: INFO
 
-# Security headers
 server:
-  port: 8443
-  servlet:
-    session:
-      timeout: 24h
-      cookie:
-        secure: true
-        http-only: true
-        same-site: none
-
-  ssl:
-    enabled: true
-    key-store: /home/ec2-user/.certs/leetcode-app/keystore.p12
-    key-store-password: changeit
-    key-store-type: PKCS12
-    key-alias: springboot
+  error:
+    include-stacktrace: never

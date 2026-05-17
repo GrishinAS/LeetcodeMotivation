@@ -9,23 +9,19 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-
     useEffect(() => {
         sessionStorage.removeItem('userData');
+        localStorage.removeItem('jwt');
     }, []);
 
     const handleLogin = async () => {
         try {
-            sessionStorage.removeItem('userData');
             setError('');
-            const response = await axios.post(`${API_HOST}/api/user/login`,
-                { email, password },
-                {
-                    withCredentials: true
-                });
-            sessionStorage.setItem('userData', JSON.stringify(response.data));
-            
-            onLogin(response.data);
+            const response = await axios.post(`${API_HOST}/api/user/login`, { email, password });
+            const { token, ...userData } = response.data;
+            localStorage.setItem('jwt', token);
+            sessionStorage.setItem('userData', JSON.stringify(userData));
+            onLogin(userData);
         } catch (err) {
             console.error('Login error:', err);
             setError('Login failed. Please try again.');

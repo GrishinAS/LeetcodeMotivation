@@ -1,32 +1,33 @@
 package com.grishin.leetcodemotivation.stats.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
-@Entity
-@NoArgsConstructor
+@Embeddable
 @Data
-@Table(name = "tasks")
+@NoArgsConstructor
 public final class SolvedTasks {
+
+    @Column(name = "solved_easy")
     private int solvedEasy;
+
+    @Column(name = "solved_medium")
     private int solvedMedium;
+
+    @Column(name = "solved_hard")
     private int solvedHard;
-    private Date lastSync;
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
+
+    @Column(name = "last_sync")
+    private Instant lastSync;
 
     public SolvedTasks(int solvedEasy, int solvedMedium, int solvedHard) {
         this.solvedEasy = solvedEasy;
         this.solvedMedium = solvedMedium;
         this.solvedHard = solvedHard;
-        this.lastSync = new Date();
+        this.lastSync = Instant.now();
     }
 }
