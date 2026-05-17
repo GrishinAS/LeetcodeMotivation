@@ -15,7 +15,7 @@ spring:
       # Keep pool small — Lambda has limited memory and connections are expensive across cold starts
       maximum-pool-size: 2
       minimum-idle: 1
-      connection-timeout: 20000
+      connection-timeout: 5000
   jpa:
     hibernate:
       ddl-auto: validate
