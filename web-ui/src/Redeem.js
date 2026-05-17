@@ -11,11 +11,6 @@ const Redeem = ({ username }) => {
   const [isRedeeming, setIsRedeeming] = useState(null);
   const [rewards, setRewards] = useState(null);
 
-  useEffect(() => {
-    fetchCurrentPoints().catch(err => console.error(err));
-    fetchRewards().catch(err => console.error(err));
-  }, [username]);
-
   const fetchCurrentPoints = async () => {
     setLoading(true);
     try {
@@ -36,6 +31,12 @@ const Redeem = ({ username }) => {
       setError('Failed to fetch available rewards.');
     }
   };
+
+  useEffect(() => {
+    fetchCurrentPoints().catch(err => console.error(err));
+    fetchRewards().catch(err => console.error(err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
 
   const handleRedeemReward = async (reward) => {
     if (currentPoints < reward.pointCost) return;
