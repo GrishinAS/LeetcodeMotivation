@@ -15,8 +15,6 @@ const App = () => {
 
     useEffect(() => {
         const checkAuthStatus = async () => {
-            const userData = sessionStorage.getItem('userData');
-
             try {
                 const response = await axios.get(`/api/user/me`);
                 const parsedUserData = response.data;
