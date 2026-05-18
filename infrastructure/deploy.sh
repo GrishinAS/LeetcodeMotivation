@@ -20,6 +20,8 @@ set -euo pipefail
 STACK_NAME="${STACK_NAME:-leetcode-motivation}"
 REGION="${AWS_REGION:-us-east-1}"
 ZIP_FILE="backend/build/distributions/app-lambda.zip"
+GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || date +%s)
+S3_KEY="app-lambda-${GIT_HASH}.zip"
 
 : "${JWT_SECRET:?JWT_SECRET env var is required (min 32 characters)}"
 : "${ALERT_EMAIL:?ALERT_EMAIL env var is required}"
@@ -55,8 +57,8 @@ if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region "$REGION" 2>/dev/nul
 fi
 
 # ── 3. Upload ZIP ─────────────────────────────────────────────────────────────
-echo "==> Uploading Lambda package to s3://${BUCKET_NAME}/app-lambda.zip ..."
-aws s3 cp "$ZIP_FILE" "s3://${BUCKET_NAME}/app-lambda.zip" --region "$REGION"
+echo "==> Uploading Lambda package to s3://${BUCKET_NAME}/${S3_KEY} ..."
+aws s3 cp "$ZIP_FILE" "s3://${BUCKET_NAME}/${S3_KEY}" --region "$REGION"
 
 # ── 4. Deploy CloudFormation ──────────────────────────────────────────────────
 echo "==> Deploying CloudFormation stack '$STACK_NAME'..."
@@ -65,7 +67,7 @@ aws cloudformation deploy \
   --stack-name "$STACK_NAME" \
   --parameter-overrides \
     S3BucketName="$BUCKET_NAME" \
-    S3Key="app-lambda.zip" \
+    S3Key="$S3_KEY" \
     JwtSecret="$JWT_SECRET" \
     CorsAllowedOrigins="${CORS_ALLOWED_ORIGINS:-https://leetcode-motivation.vercel.app}" \
     AlertEmail="$ALERT_EMAIL" \

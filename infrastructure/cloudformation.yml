@@ -103,6 +103,8 @@ Resources:
       MemorySize: !Ref LambdaMemoryMb
       Timeout: !Ref LambdaTimeoutSeconds
       ReservedConcurrentExecutions: !If [HasReservedConcurrency, !Ref LambdaReservedConcurrency, !Ref AWS::NoValue]
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           SPRING_PROFILES_ACTIVE: prod
@@ -112,6 +114,22 @@ Resources:
           DB_USERNAME: !Ref DbUsername
           DB_PASSWORD: !Ref DbPassword
 
+  # ─── Lambda version + alias (SnapStart only applies to published versions) ─────
+
+  AppFunctionVersion:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName: !Ref AppFunction
+      Description: !Sub "S3Key ${S3Key}"
+
+  AppFunctionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName: !Ref AppFunction
+      FunctionVersion: !GetAtt AppFunctionVersion.Version
+      Name: live
+
   # ─── API Gateway HTTP API ─────────────────────────────────────────────────────
 
   HttpApi:
@@ -119,25 +137,13 @@ Resources:
     Properties:
       Name: !Sub ${AWS::StackName}-api
       ProtocolType: HTTP
-      CorsConfiguration:
-        AllowOrigins:
-          - !Ref CorsAllowedOrigins
-        AllowMethods:
-          - GET
-          - POST
-          - OPTIONS
-        AllowHeaders:
-          - Content-Type
-          - Authorization
-        AllowCredentials: true
-        MaxAge: 3600
 
   ApiIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref HttpApi
       IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppFunction.Arn}/invocations
+      IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppFunctionAlias}/invocations
       PayloadFormatVersion: '2.0'
 
   ApiRoute:
@@ -160,7 +166,7 @@ Resources:
   AppFunctionApiPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref AppFunction
+      FunctionName: !Ref AppFunctionAlias
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
