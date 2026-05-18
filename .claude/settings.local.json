@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path * -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(export JAVA_HOME=*)",
+      "Bash(*/bin/jar tf *)",
+      "Bash(aws cloudformation *)",
+      "Bash(aws acm request-certificate *)",
+      "Bash(aws acm describe-certificate *)",
+      "Bash(aws acm *)",
+      "Bash(./gradlew clean *)",
+      "Bash(aws s3 *)",
+      "Bash(aws lambda *)",
+      "Bash(aws logs *)",
+      "Bash(aws sts *)",
+      "Bash(aws apigatewayv2 *)",
+      "Bash(set -a && source infrastructure/.env && set +a && bash infrastructure/deploy.sh *)",
+      "Bash(set -a && source infrastructure/.env && set +a && bash infrastructure/deploy.sh)",
+      "Bash(bash infrastructure/deploy.sh *)",
+      "PowerShell(aws logs *)",
+      "PowerShell(aws lambda *)",
+      "PowerShell(aws cloudformation *)",
+      "PowerShell(aws s3 *)",
+      "PowerShell(aws acm *)",
+      "PowerShell(aws sts *)",
+      "PowerShell(aws apigatewayv2 *)",
+      "PowerShell(Invoke-WebRequest *)",
+      "PowerShell(Invoke-RestMethod *)",
+      "Bash(curl *)"
+    ]
+  }
+}
