@@ -116,10 +116,67 @@ REACT_APP_USE_MOCK_API=false npm start
 
 ## 🏭 Production Deployment
 
-### Backend (AWS)
-1. Set environment variables in your AWS service (ECS/Elastic Beanstalk/EC2)
-2. Deploy JAR file: `backend/build/libs/LeetcodeMotivation-*.jar`
-3. Run with: `java -jar app.jar --spring.profiles.active=prod`
+### Backend (Cloud VM + Nginx)
+
+Use this setup when the backend service runs on the VM on port `8443`, DNS points
+`leetstreak.pro` to the VM external IP, and the frontend should call the backend through
+standard HTTPS:
+
+```text
+Vercel frontend -> https://leetstreak.pro:443 -> Nginx on VM -> Spring Boot on 127.0.0.1:8443
+```
+
+Before running the script, make sure `leetstreak.pro` and `www.leetstreak.pro` point to
+the VM external IP, and Google Cloud firewall allows inbound traffic on ports `80` and
+`443`.
+
+Copy the repository to the VM, then run:
+
+```bash
+sudo bash infrastructure/setup-vm-nginx-letsencrypt.sh
+```
+
+The script:
+
+- creates a valid free Let's Encrypt certificate, not a self-signed certificate
+- exports it to `/home/<vm-user>/.certs/leetcode-app/keystore.p12` for Spring Boot
+- installs Nginx
+- configures Nginx on ports `80` and `443`
+- redirects HTTP to HTTPS
+- proxies `https://leetstreak.pro/api/...` to `https://127.0.0.1:8443/api/...`
+- installs a Certbot renewal hook that refreshes `keystore.p12` after certificate renewal
+
+By default the script uses:
+
+```bash
+DOMAIN=leetstreak.pro
+APP_PROTOCOL=https
+APP_PORT=8443
+APP_USER=<sudo caller>
+```
+
+Override values only if needed:
+
+```bash
+sudo DOMAIN=leetstreak.pro APP_PROTOCOL=http APP_PORT=8443 APP_USER=grishin_anton95 \
+  bash infrastructure/setup-vm-nginx-letsencrypt.sh
+```
+
+The script asks for a PKCS12 keystore password. Use the same password in the Spring Boot
+production SSL configuration.
+
+Set the frontend API host to the public domain without `:8443`:
+
+```bash
+REACT_APP_API_HOST=https://leetstreak.pro
+REACT_APP_USE_MOCK_API=false
+```
+
+Also make sure backend CORS allows the production frontend origin:
+
+```bash
+CORS_ALLOWED_ORIGINS=https://leetcode-motivation.vercel.app,https://leetstreak.pro
+```
 
 ### Frontend (AWS S3/CloudFront)
 1. Build: `npm run build`  
