@@ -1,9 +1,9 @@
 name: Deploy backend to EC2
 
 on:
-  push:
-    branches:
-      - master
+  # Paused: automatic deploy on push to master is disabled for now.
+  # Re-enable by restoring the push trigger.
+  workflow_dispatch:
 
 jobs:
   deploy:
